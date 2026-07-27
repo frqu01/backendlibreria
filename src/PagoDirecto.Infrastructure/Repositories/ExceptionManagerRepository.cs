@@ -53,8 +53,6 @@ namespace PagoDirecto.Infrastructure.Repositories
                 {
                     var traceId = Guid.NewGuid().ToString("N").Substring(0, 8).ToUpper();
                     ex.Error.Data["TraceId"] = traceId;
-                    
-                    var errorDetail = ex.Error.InnerException?.Message ?? ex.Error.Message;
 
                     resultadoApi = new Result()
                     {
@@ -62,7 +60,7 @@ namespace PagoDirecto.Infrastructure.Repositories
                         {
                             IsSuccess = false,
                             ResponseMessage = "Ocurrió un error inesperado al procesar la solicitud.",
-                            ResponseMessageDetail = $"{errorDetail} (Reference ID: {traceId})",
+                            ResponseMessageDetail = $"Reference ID: {traceId}",
                             NotificationTypeId = NotificationType.Error
                         }
                     };
