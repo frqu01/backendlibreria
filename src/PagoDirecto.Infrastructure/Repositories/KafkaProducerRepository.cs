@@ -2,6 +2,7 @@ using PagoDirecto.Application.Interfaces;
 using PagoDirecto.Domain.Entities;
 using PagoDirecto.Domain.Enums;
 using Confluent.Kafka;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Threading.Tasks;
@@ -10,12 +11,12 @@ namespace PagoDirecto.Infrastructure.Repositories;
 
 internal class KafkaProducerRepository : IKafkaProducer
 {
-    protected readonly ILogRecorder _iLoggerApi;
+    protected readonly ILogger<KafkaProducerRepository> _logger;
     private readonly IProducer<Null, string> _producer;
 
-    public KafkaProducerRepository(ILogRecorder iLoggerApi, IProducer<Null, string> producer)
+    public KafkaProducerRepository(ILogger<KafkaProducerRepository> logger, IProducer<Null, string> producer)
     {
-        _iLoggerApi = iLoggerApi;
+        _logger = logger;
         _producer = producer;
     }
 
@@ -31,7 +32,7 @@ internal class KafkaProducerRepository : IKafkaProducer
 
             var result = await _producer.ProduceAsync(topic, new Message<Null, string> { Value = jsonMessage });
 
-            _iLoggerApi.Information($"Mensaje Kafka publicado en tópico '{topic}' (Offset: {result.Offset})");
+            _logger.LogInformation("Mensaje Kafka publicado en tópico '{Topic}' (Offset: {Offset})", topic, result.Offset);
 
             resultado.RequestStatus = new RequestStatus()
             {
@@ -42,7 +43,7 @@ internal class KafkaProducerRepository : IKafkaProducer
         }
         catch (ProduceException<Null, string> e)
         {
-            _iLoggerApi.Error($"Error publicando mensaje Kafka en tópico '{topic}': {e.Error.Reason}");
+            _logger.LogError(e, "Error publicando mensaje Kafka en tópico '{Topic}': {Reason}", topic, e.Error.Reason);
             resultado.RequestStatus = new RequestStatus()
             {
                 IsSuccess = false,
@@ -52,7 +53,7 @@ internal class KafkaProducerRepository : IKafkaProducer
         }
         catch (Exception ex)
         {
-            _iLoggerApi.Error($"Error inesperado en KafkaProducerRepository: {ex.Message}");
+            _logger.LogError(ex, "Error inesperado en KafkaProducerRepository al publicar en tópico '{Topic}'", topic);
             resultado.RequestStatus = new RequestStatus()
             {
                 IsSuccess = false,

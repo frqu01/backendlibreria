@@ -30,7 +30,7 @@ public abstract class KafkaBackgroundConsumer<T> : BackgroundService where T : c
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation($"Iniciando Kafka Consumer para el tópico: {_topic}");
+        _logger.LogInformation("Iniciando Kafka Consumer para el tópico: {Topic}", _topic);
 
         await Task.Yield(); // Ensures the method becomes asynchronous immediately
 
@@ -55,7 +55,7 @@ public abstract class KafkaBackgroundConsumer<T> : BackgroundService where T : c
                 }
                 catch (ConsumeException e)
                 {
-                    _logger.LogError($"Error consumiendo mensaje: {e.Error.Reason}");
+                    _logger.LogError(e, "Error consumiendo mensaje: {Reason}", e.Error.Reason);
                 }
             }
         }
