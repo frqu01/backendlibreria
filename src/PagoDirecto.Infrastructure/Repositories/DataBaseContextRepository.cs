@@ -1,4 +1,4 @@
-﻿using PagoDirecto.Application.Extensions;
+using PagoDirecto.Application.Extensions;
 using PagoDirecto.Domain.Entities;
 using PagoDirecto.Domain.Enums;
 using SchemaType = PagoDirecto.Domain.Enums.SchemaType;
@@ -44,27 +44,6 @@ namespace PagoDirecto.Infrastructure.Repositories
                 throw _iExceptionFactory.Warning("Los parámetos no fueron enviados a Infraestructura.");
             }
 
-            //Validad id de usuario
-            if (procedimientoAlmacenadoApi.Parameters.GetPropertyTypeName("UserRecordId") == null)
-            {
-                throw _iExceptionFactory.Warning("El campo UserRecordId no esta en los parámetros en Infraestructura.");
-            }
-
-            if (procedimientoAlmacenadoApi.Parameters.GetPropertyValue("UserRecordId") == null)
-            {
-                throw _iExceptionFactory.Warning("El campo UserRecordId fue enviado sin valor.");
-            }
-
-            //Validar id de empresa
-            if (procedimientoAlmacenadoApi.Parameters.GetPropertyTypeName("CompanyRecordId") == null)
-            {
-                throw _iExceptionFactory.Warning("El campo CompanyRecordId no esta en los parámetros en Infraestructura.");
-            }
-
-            if (procedimientoAlmacenadoApi.Parameters.GetPropertyValue("CompanyRecordId") == null)
-            {
-                throw _iExceptionFactory.Warning("El campo CompanyRecordId fue enviado sin valor.");
-            }
 
             //Ejecutar procedimiento almacenado 
             var sqlParameters = ListaParameters(procedimientoAlmacenadoApi.Parameters, listaParametersProcedimiento);
@@ -332,7 +311,7 @@ namespace PagoDirecto.Infrastructure.Repositories
             return conn.Open();
         }
 
-        public async Task<Result> Create<T>(string storeProcedureName, object? Parameters, DbCommand dbCommand)
+        public async Task<Result> Create<T>(string storeProcedureName, Parameter Parameters, DbCommand dbCommand)
         {
             return await StoreProcedure<T>(SchemaType.Create, new ()
             {
@@ -342,7 +321,7 @@ namespace PagoDirecto.Infrastructure.Repositories
             });
         }
 
-        public async Task<Result> Read<T>(string storeProcedureName, object? Parameters, DbCommand dbCommand)
+        public async Task<Result> Read<T>(string storeProcedureName, Parameter Parameters, DbCommand dbCommand)
         {
             return await StoreProcedure<T>(SchemaType.Read, new()
             {
@@ -352,7 +331,7 @@ namespace PagoDirecto.Infrastructure.Repositories
             });
         }
 
-        public async Task<Result> Update<T>(string storeProcedureName, object? Parameters, DbCommand dbCommand)
+        public async Task<Result> Update<T>(string storeProcedureName, Parameter Parameters, DbCommand dbCommand)
         {
             return await StoreProcedure<T>(SchemaType.Update, new()
             {
@@ -362,7 +341,7 @@ namespace PagoDirecto.Infrastructure.Repositories
             });
         }
 
-        public async Task<Result> Delete<T>(string storeProcedureName, object? Parameters, DbCommand dbCommand)
+        public async Task<Result> Delete<T>(string storeProcedureName, Parameter Parameters, DbCommand dbCommand)
         {
             return await StoreProcedure<T>(SchemaType.Delete, new()
             {
@@ -372,7 +351,7 @@ namespace PagoDirecto.Infrastructure.Repositories
             });
         }
 
-        public async Task<Result> Activate<T>(string storeProcedureName, object? Parameters, DbCommand dbCommand)
+        public async Task<Result> Activate<T>(string storeProcedureName, Parameter Parameters, DbCommand dbCommand)
         {
             return await StoreProcedure<T>(SchemaType.Activate, new()
             {
