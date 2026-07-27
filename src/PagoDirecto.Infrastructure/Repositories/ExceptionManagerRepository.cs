@@ -1,4 +1,4 @@
-﻿using PagoDirecto.Application.Extensions;
+using PagoDirecto.Application.Extensions;
 using PagoDirecto.Domain.Entities;
 using PagoDirecto.Domain.Enums;
 using PagoDirecto.Application.Interfaces;
@@ -42,7 +42,7 @@ namespace PagoDirecto.Infrastructure.Repositories
 
             if (ex != null)
             {
-                mensaje = ex.Error.Message == null ? (ex.Error.InnerException == null ? "" : ex.Error.InnerException.Message) : ex.Error.Message + (ex.Error.InnerException == null ? "" : " " + ex.Error.InnerException.Message);
+                mensaje = ex.Error.GetBaseException().Message;
 
                 if (ex.Error.Data["Result"] != null)
                 {
@@ -139,55 +139,58 @@ namespace PagoDirecto.Infrastructure.Repositories
         {
             var errores = new List<ValidationError>();
             int count = 1;
-            long registroEmpresaId = 0;
+            int registroEmpresaId = 0;
             long registroApiUsernameId = 0;
 
-            if (changeTracker.Entries().Count() > 0)
+            if (changeTracker.Entries().Any())
             {
                 foreach (var item in changeTracker.Entries())
                 {
                     var nameEntity = item.Entity.GetType().Name;
 
-                    if (item.Entity.GetType().GetProperty("CompanyRecordId") == null ||
-                        long.Parse(item.Entity.GetType().GetProperty("CompanyRecordId").GetValue(item.Entity, null).ToString()) == 0)
+                    if (item.Entity is EntityRecord record)
                     {
-                        if(registroEmpresaId != 0)
+                        if (record.CompanyRecordId == 0)
                         {
-                            item.Entity.GetType().GetProperty("CompanyRecordId").SetValue(item.Entity, registroEmpresaId);
+                            if (registroEmpresaId != 0)
+                            {
+                                record.CompanyRecordId = registroEmpresaId;
+                            }
+                            else
+                            {
+                                errores.Add(new ValidationError()
+                                {
+                                    Entity = nameEntity,
+                                    Field = "CompanyRecordId",
+                                    Message = "'CompanyRecordId' no debería estar vacío."
+                                });
+                            }
                         }
                         else
                         {
-                            errores.Add(new ValidationError()
-                            {
-                                Entity = nameEntity,
-                                Field = "CompanyRecordId",
-                                Message = "'CompanyRecordId' no debería estar vacío."
-                            });
+                            registroEmpresaId = record.CompanyRecordId;
                         }
-                    }
-                    else {
-                        registroEmpresaId = long.Parse(item.Entity.GetType().GetProperty("CompanyRecordId").GetValue(item.Entity, null).ToString());
-                    }
 
-
-                    if (item.Entity.GetType().GetProperty("UserRecordId") == null ||
-                        long.Parse(item.Entity.GetType().GetProperty("UserRecordId").GetValue(item.Entity, null).ToString()) == 0)
-                    {
-                        if (registroApiUsernameId != 0) 
+                        if (record.UserRecordId == 0)
                         {
-                            item.Entity.GetType().GetProperty("UserRecordId").SetValue(item.Entity, registroApiUsernameId);
-                        } else
-                        {
-                            errores.Add(new ValidationError()
+                            if (registroApiUsernameId != 0)
                             {
-                                Entity = nameEntity,
-                                Field = "UserRecordId",
-                                Message = "'UserRecordId' no debería estar vacío."
-                            });
+                                record.UserRecordId = registroApiUsernameId;
+                            }
+                            else
+                            {
+                                errores.Add(new ValidationError()
+                                {
+                                    Entity = nameEntity,
+                                    Field = "UserRecordId",
+                                    Message = "'UserRecordId' no debería estar vacío."
+                                });
+                            }
                         }
-                    } else
-                    {
-                        registroApiUsernameId = long.Parse(item.Entity.GetType().GetProperty("UserRecordId").GetValue(item.Entity, null).ToString());
+                        else
+                        {
+                            registroApiUsernameId = record.UserRecordId;
+                        }
                     }
 
                     count++;
