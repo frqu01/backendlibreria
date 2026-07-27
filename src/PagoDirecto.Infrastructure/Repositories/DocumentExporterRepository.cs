@@ -15,11 +15,18 @@ using System.Linq;
 using System.Reflection;
 using System.IO;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace PagoDirecto.Infrastructure.Repositories
 {
     internal class DocumentExporterRepository : IDocumentExporter
     {
+        private readonly ILogger<DocumentExporterRepository> _logger;
+
+        public DocumentExporterRepository(ILogger<DocumentExporterRepository> logger)
+        {
+            _logger = logger;
+        }
         public Task<Result> Exportar(object? listaDatos, ExportReportType ePagoDirectoExportReportTypeApi)
         {
             if (listaDatos == null || !(listaDatos is System.Collections.IEnumerable enumerableDatos))
@@ -55,14 +62,16 @@ namespace PagoDirecto.Infrastructure.Repositories
             if (list.Count < 1)
                 return Task.FromResult(ErrorResult("No se encontraron registros para exportar."));
 
-            var primerDato = list[0];
-            var properties = primerDato.GetType().GetProperties();
+            try
+            {
+                var primerDato = list[0];
+                var properties = primerDato.GetType().GetProperties();
 
-            string nombreArchivo = primerDato.GetType().Name
-                        + DateTime.Now.ToString("yyyyMMddHHmmssfff")
-                        + ".xlsx";
+                string nombreArchivo = primerDato.GetType().Name
+                            + DateTime.Now.ToString("yyyyMMddHHmmssfff")
+                            + ".xlsx";
 
-            using (MemoryStream memoryStream = new MemoryStream())
+                using (MemoryStream memoryStream = new MemoryStream())
             {
                 using (var wbook = new XLWorkbook())
                 {
@@ -159,6 +168,12 @@ namespace PagoDirecto.Infrastructure.Repositories
                     return Task.FromResult(resultadoApi);
                 }
             }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al generar el reporte en Excel.");
+                return Task.FromResult(ErrorResult("Ocurrió un error inesperado al generar el archivo Excel."));
+            }
         }
 
         public Task<Result> Pdf(object? listaDatos)
@@ -170,14 +185,16 @@ namespace PagoDirecto.Infrastructure.Repositories
             if (list.Count < 1)
                 return Task.FromResult(ErrorResult("No se encontraron registros para exportar."));
 
-            var primerDato = list[0];
-            var properties = primerDato.GetType().GetProperties();
+            try
+            {
+                var primerDato = list[0];
+                var properties = primerDato.GetType().GetProperties();
 
-            string nombreArchivo = primerDato.GetType().Name
-                        + DateTime.Now.ToString("yyyyMMddHHmmssfff")
-                        + ".pdf";
+                string nombreArchivo = primerDato.GetType().Name
+                            + DateTime.Now.ToString("yyyyMMddHHmmssfff")
+                            + ".pdf";
 
-            using (MemoryStream memoryStream = new MemoryStream())
+                using (MemoryStream memoryStream = new MemoryStream())
             {
                 PdfWriter pdfWriter = new PdfWriter(memoryStream);
                 pdfWriter.SetCloseStream(false);
@@ -271,6 +288,12 @@ namespace PagoDirecto.Infrastructure.Repositories
                 };
                 return Task.FromResult(resultadoApi);
             }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al generar el reporte en PDF.");
+                return Task.FromResult(ErrorResult("Ocurrió un error inesperado al generar el archivo PDF."));
+            }
         }
 
         public Task<Result> Word(object? listaDatos)
@@ -282,14 +305,16 @@ namespace PagoDirecto.Infrastructure.Repositories
             if (list.Count < 1)
                 return Task.FromResult(ErrorResult("No se encontraron registros para exportar."));
 
-            var primerDato = list[0];
-            var properties = primerDato.GetType().GetProperties();
+            try
+            {
+                var primerDato = list[0];
+                var properties = primerDato.GetType().GetProperties();
 
-            string nombreArchivo = primerDato.GetType().Name
-                        + DateTime.Now.ToString("yyyyMMddHHmmssfff")
-                        + ".docx";
+                string nombreArchivo = primerDato.GetType().Name
+                            + DateTime.Now.ToString("yyyyMMddHHmmssfff")
+                            + ".docx";
 
-            using (var memoryStream = new MemoryStream())
+                using (var memoryStream = new MemoryStream())
             {
                 using (WordprocessingDocument wordDocument = WordprocessingDocument.Create(memoryStream, WordprocessingDocumentType.Document, true))
                 {
@@ -380,7 +405,7 @@ namespace PagoDirecto.Infrastructure.Repositories
 
                             paragraph.Append(paragraphProperties);
                             run.Append(runProperties);
-                            run.Append(new Text(value.ToString()));
+                            run.Append(new Text(value?.ToString() ?? string.Empty));
                             paragraph.Append(run);
                             tableCell.Append(paragraph);
 
@@ -414,6 +439,12 @@ namespace PagoDirecto.Infrastructure.Repositories
                 };
 
                 return Task.FromResult(resultadoApi);
+            }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al generar el reporte en Word.");
+                return Task.FromResult(ErrorResult("Ocurrió un error inesperado al generar el archivo Word."));
             }
         }
 
