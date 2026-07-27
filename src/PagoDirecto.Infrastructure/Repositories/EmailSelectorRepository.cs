@@ -6,8 +6,8 @@ using Microsoft.AspNetCore.StaticFiles;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Mail;
-using System.Net;
+using MailKit.Net.Smtp;
+using MimeKit;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -50,34 +50,34 @@ namespace PagoDirecto.Infrastructure.Repositories
 
             try
             {
-                using var message = new MailMessage();
-                message.From = new MailAddress(correoApi.Sender);
+                using var message = new MimeMessage();
+                message.From.Add(MailboxAddress.Parse(correoApi.Sender));
                 message.Subject = correoApi.Subject ?? string.Empty;
-                message.IsBodyHtml = true;
-                message.Body = correoApi.Body;
 
                 foreach (var item in correoApi.Recipients.Where(r => !string.IsNullOrWhiteSpace(r)))
                 {
-                    message.To.Add(item);
+                    message.To.Add(MailboxAddress.Parse(item));
                 }
 
                 if (correoApi.ReplyTo != null)
                 {
                     foreach (var item in correoApi.ReplyTo.Where(r => !string.IsNullOrWhiteSpace(r)))
-                        message.ReplyToList.Add(item);
+                        message.ReplyTo.Add(MailboxAddress.Parse(item));
                 }
 
                 if (correoApi.Cc != null)
                 {
                     foreach (var item in correoApi.Cc.Where(c => !string.IsNullOrWhiteSpace(c)))
-                        message.CC.Add(item);
+                        message.Cc.Add(MailboxAddress.Parse(item));
                 }
 
                 if (correoApi.Bcc != null)
                 {
                     foreach (var item in correoApi.Bcc.Where(b => !string.IsNullOrWhiteSpace(b)))
-                        message.Bcc.Add(item);
+                        message.Bcc.Add(MailboxAddress.Parse(item));
                 }
+
+                var builder = new BodyBuilder { HtmlBody = correoApi.Body };
 
                 if (correoApi.Attachments != null)
                 {
@@ -86,22 +86,19 @@ namespace PagoDirecto.Infrastructure.Repositories
                         if (item.AttachmentStream != null)
                         {
                             item.AttachmentStream.Position = 0; // Prevenir errores si el stream ya fue leído
-                            message.Attachments.Add(new Attachment(item.AttachmentStream, item.FileName, item.FileExtensionType.GetDescription()));
+                            var contentType = ContentType.Parse(item.FileExtensionType.GetDescription());
+                            builder.Attachments.Add(item.FileName, item.AttachmentStream, contentType);
                         }
                     }
                 }
 
-                using var smtp = new SmtpClient()
-                {
-                    Host = hostType.GetHost(),
-                    Port = hostType.GetPort(),
-                    EnableSsl = true,
-                    DeliveryMethod = SmtpDeliveryMethod.Network,
-                    UseDefaultCredentials = false,
-                    Credentials = new NetworkCredential(correoApi.Sender, correoApi.Password)
-                };
+                message.Body = builder.ToMessageBody();
 
-                await smtp.SendMailAsync(message, cancellationToken);
+                using var smtp = new SmtpClient();
+                await smtp.ConnectAsync(hostType.GetHost(), hostType.GetPort(), MailKit.Security.SecureSocketOptions.StartTls, cancellationToken);
+                await smtp.AuthenticateAsync(correoApi.Sender, correoApi.Password, cancellationToken);
+                await smtp.SendAsync(message, cancellationToken);
+                await smtp.DisconnectAsync(true, cancellationToken);
 
                 return new Result()
                 {
