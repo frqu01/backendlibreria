@@ -212,7 +212,7 @@ namespace PagoDirecto.Infrastructure.Repositories
                     };
 
                     exception.Data["Result"] = resultadoApi;
-                    exception.Data["StatusCode"] = 200;
+                    exception.Data["StatusCode"] = 400;
 
                     _iLoggerApi.Error("Se encontraron errores de validación.");
 

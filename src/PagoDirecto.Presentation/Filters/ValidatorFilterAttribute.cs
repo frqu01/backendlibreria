@@ -1,4 +1,4 @@
-﻿using PagoDirecto.Application.Extensions;
+using PagoDirecto.Application.Extensions;
 using PagoDirecto.Domain.Entities;
 using PagoDirecto.Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
@@ -46,7 +46,7 @@ public class ValidatorFilterAttribute : ActionFilterAttribute
 
             context.Result = new JsonResult(resultadoApi)
             {
-                StatusCode = 200
+                StatusCode = 400
             };
         }
     }
