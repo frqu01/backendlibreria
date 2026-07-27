@@ -1,4 +1,4 @@
-﻿using PagoDirecto.Application.Extensions;
+using PagoDirecto.Application.Extensions;
 using PagoDirecto.Domain.Entities;
 using PagoDirecto.Domain.Enums;
 using PagoDirecto.Application.Interfaces;
@@ -157,7 +157,7 @@ namespace PagoDirecto.Infrastructure.Repositories
             {
                 RequestStatus = new()
                 {
-                    IsSuccess = true,
+                    IsSuccess = false,
                     ResponseMessage = ResponseMessage.ValidationError.GetString(),
                     NotificationTypeId = NotificationType.Warning
                 },
