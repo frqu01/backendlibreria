@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>PagoDirecto.Domain</RootNamespace>
+    <PackageId>PagoDirecto.Domain</PackageId>
+    <Product>PagoDirecto.Domain</Product>
+    <Description>Capa de Dominio para PagoDirectoApi (Modelos, Entidades, Enums)</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" Version="12.1.1" />
+  </ItemGroup>
+
+</Project>
+

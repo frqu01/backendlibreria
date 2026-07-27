@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>PagoDirecto.Presentation</RootNamespace>
+    <PackageId>PagoDirecto.Presentation</PackageId>
+    <Product>PagoDirecto.Presentation</Product>
+    <Description>Capa de PresentaciÃ³n e IntegraciÃ³n Web/API para PagoDirectoApi (Controladores, Filtros y DI Extensions)</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PagoDirecto.Infrastructure\PagoDirecto.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="MediatR" Version="14.1.0" />
+    <PackageReference Include="Microsoft.OpenApi" Version="2.7.5" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.1" />
+  </ItemGroup>
+
+</Project>
+
