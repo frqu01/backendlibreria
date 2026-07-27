@@ -63,9 +63,9 @@ namespace PagoDirecto.Infrastructure.Repositories
                     };
                 }
 
-                if (ex.Error.Data["StatusCode"] != null)
+                if (ex.Error.Data["StatusCode"] is int statusCode)
                 {
-                    context.Response.StatusCode = (int)ex.Error.Data["StatusCode"];
+                    context.Response.StatusCode = statusCode;
                 }
 
                 contenido = mensaje + $" :: [StatusCode] :: {context.Response.StatusCode} :: [Tracer] :: {ex.Error.StackTrace}";
@@ -82,7 +82,7 @@ namespace PagoDirecto.Infrastructure.Repositories
                     }
                 };
 
-                contenido = ex.Error.Message == null ? MessageType.UnhandledException.GetString() : ex.Error.Message + $" :: [StatusCode] :: 500 :: [Tracer] :: No se pudo obtener el detalle del error";
+                contenido = $"{MessageType.UnhandledException.GetString()} :: [StatusCode] :: 500 :: [Tracer] :: No se pudo obtener el detalle del error";
             }
 
             _iLoggerApi.Error(contenido);
