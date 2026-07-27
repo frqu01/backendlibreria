@@ -13,6 +13,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
+using Microsoft.Extensions.Logging;
 
 namespace PagoDirecto.Infrastructure.Repositories
 {
@@ -20,13 +21,16 @@ namespace PagoDirecto.Infrastructure.Repositories
     {
         protected readonly IResponseFactory _iResponseApi;
         protected readonly IHttpClientFactory _httpClientFactory;
+        protected readonly Microsoft.Extensions.Logging.ILogger<HttpRestClientRepository> _logger;
 
         public HttpRestClientRepository(
             IResponseFactory iResponseApi, 
-            IHttpClientFactory httpClientFactory)
+            IHttpClientFactory httpClientFactory,
+            Microsoft.Extensions.Logging.ILogger<HttpRestClientRepository> logger)
         {
             _iResponseApi = iResponseApi;
             _httpClientFactory = httpClientFactory;
+            _logger = logger;
         }
 
         public async Task<Result> SendAsync(RestServiceRequest solicitudServicioApi, CancellationToken cancellationToken = default)
@@ -49,7 +53,7 @@ namespace PagoDirecto.Infrastructure.Repositories
                 url = url + "?" + paramsQuery;
             }
 
-            HttpContent httpContent = null;
+            HttpContent? httpContent = null;
 
             if (solicitudServicioApi.Body != null)
             {
@@ -64,7 +68,7 @@ namespace PagoDirecto.Infrastructure.Repositories
 
                 if (solicitudServicioApi.Body.BodyType == RestBodyType.FormData)
                 {
-                    IEnumerable<KeyValuePair<string, string>> nameValueCollection = null;
+                    IEnumerable<KeyValuePair<string, string>>? nameValueCollection = null;
                     if (solicitudServicioApi.Body.Payload is IEnumerable<KeyValuePair<string, string>> kvpList)
                     {
                         nameValueCollection = kvpList;
@@ -100,11 +104,14 @@ namespace PagoDirecto.Infrastructure.Repositories
 
             if (solicitudServicioApi.Authentication != null)
             {
-                autenticationEncrypt = Convert.ToBase64String(Encoding.ASCII.GetBytes(string.Format("{0}:{1}", solicitudServicioApi.Authentication.Username, solicitudServicioApi.Authentication.Password)));
-
                 if (solicitudServicioApi.Authentication.AuthorizationType == RestAuthorizationType.BasicAuth)
                 {
+                    autenticationEncrypt = Convert.ToBase64String(Encoding.UTF8.GetBytes(string.Format("{0}:{1}", solicitudServicioApi.Authentication.Username, solicitudServicioApi.Authentication.Password)));
                     httpRequestMessage.Headers.Authorization = new AuthenticationHeaderValue("Basic", autenticationEncrypt);
+                }
+                else if (solicitudServicioApi.Authentication.AuthorizationType == RestAuthorizationType.BearerToken)
+                {
+                    httpRequestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", solicitudServicioApi.Authentication.Token);
                 }
             }
 
@@ -117,6 +124,8 @@ namespace PagoDirecto.Infrastructure.Repositories
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error crítico de red al consumir el servicio REST en la URL: {Url}", url);
+
                 resultadoApi.RequestStatus = new RequestStatus()
                 {
                     IsSuccess = false,
@@ -134,6 +143,8 @@ namespace PagoDirecto.Infrastructure.Repositories
 
             if (!httpResponseMessage.IsSuccessStatusCode)
             {
+                _logger.LogWarning("La API externa en {Url} devolvió código HTTP {StatusCode}. Detalle: {Response}", url, (int)httpResponseMessage.StatusCode, response);
+
                 resultadoApi.RequestStatus = new RequestStatus()
                 {
                     IsSuccess = false,

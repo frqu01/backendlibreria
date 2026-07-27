@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Serialization;
+using System.Text.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +10,8 @@ namespace PagoDirecto.Domain.Enums
     [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum RestAuthorizationType
     {
-        BasicAuth = 1
+        BasicAuth = 1,
+        BearerToken = 2
     }
 }
 
