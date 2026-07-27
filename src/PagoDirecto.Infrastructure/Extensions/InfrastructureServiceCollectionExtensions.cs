@@ -5,6 +5,7 @@ using PagoDirecto.Infrastructure.Repositories;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Confluent.Kafka;
+using OpenIddict.Server;
 
 namespace PagoDirecto.Infrastructure.Extensions;
 
@@ -64,6 +65,14 @@ public static class InfrastructureServiceCollectionExtensions
         });
 
         return services;
+    }
+
+    public static OpenIddictServerBuilder AddPagoDirectoOpenIddictHandlers(this OpenIddictServerBuilder builder)
+    {
+        builder.AddEventHandler<OpenIddictServerEvents.ApplyTokenResponseContext>(b =>
+            b.UseScopedHandler<OpenIddictServerHandlerRepository>());
+        
+        return builder;
     }
 }
 
