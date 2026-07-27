@@ -3,7 +3,6 @@ using PagoDirecto.Application.Extensions;
 using PagoDirecto.Domain.Entities;
 using PagoDirecto.Domain.Enums;
 using PagoDirecto.Application.Interfaces;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -17,19 +16,15 @@ namespace PagoDirecto.Infrastructure.Repositories
 {
     internal class LogRecorderRepository : ILogRecorder
     {
-        protected readonly IAppConfiguration _iAppConfiguration;
         protected readonly ApplicationOptions _applicationOptions;
         protected readonly ILoggerFactory _iLoggerFactory;
-        protected readonly IConfiguration _iConfiguration;
-        public LogRecorderRepository(IAppConfiguration iAppConfiguration, 
+        
+        public LogRecorderRepository(
             IOptions<ApplicationOptions> applicationOptions,
-            ILoggerFactory iLoggerFactory,
-            IConfiguration iConfiguration)
+            ILoggerFactory iLoggerFactory)
         {
-            _iAppConfiguration = iAppConfiguration;
             _applicationOptions = applicationOptions.Value;
             _iLoggerFactory = iLoggerFactory;
-            _iConfiguration = iConfiguration;
         }
         private Result Log(string contenido, LoggerNotificationType tipoLogger)
         {

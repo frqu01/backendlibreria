@@ -1,4 +1,4 @@
-﻿using PagoDirecto.Application.Extensions;
+using PagoDirecto.Application.Extensions;
 using PagoDirecto.Domain.Entities;
 using Microsoft.Data.SqlClient;
 using System.Data;
@@ -17,13 +17,13 @@ namespace PagoDirecto.Infrastructure.Repositories
         {
             try
             {
-                _dbCommand.Connection.Open();
+                _dbCommand.Connection?.Open();
             }
             catch (SqlException)
             {
-                if (_dbCommand != null && _dbCommand.Connection.State != ConnectionState.Closed)
+                if (_dbCommand != null && _dbCommand.Connection?.State != ConnectionState.Closed)
                 {
-                    _dbCommand.Connection.Close();
+                    _dbCommand.Connection?.Close();
                     _dbCommand.Dispose();
                 }
 
@@ -31,9 +31,9 @@ namespace PagoDirecto.Infrastructure.Repositories
             }
             catch (Exception)
             {
-                if (_dbCommand != null && _dbCommand.Connection.State != ConnectionState.Closed)
+                if (_dbCommand != null && _dbCommand.Connection?.State != ConnectionState.Closed)
                 {
-                    _dbCommand.Connection.Close();
+                    _dbCommand.Connection?.Close();
                     _dbCommand.Dispose();
                 }
 

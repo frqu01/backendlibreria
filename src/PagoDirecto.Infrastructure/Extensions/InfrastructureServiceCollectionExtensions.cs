@@ -2,7 +2,9 @@ using System.Reflection;
 using PagoDirecto.Application.Interfaces;
 using PagoDirecto.Domain.Entities;
 using PagoDirecto.Infrastructure.Repositories;
+using PagoDirecto.Application.Configuration;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using Microsoft.Extensions.DependencyInjection;
 using Confluent.Kafka;
 using OpenIddict.Server;
@@ -24,16 +26,14 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<ICryptoService, CryptoServiceRepository>();
         services.AddScoped<IExceptionFactory, ExceptionFactoryRepository>();
         services.AddScoped<IDocumentExporter, DocumentExporterRepository>();
-        services.AddScoped<IAppConfiguration, AppConfigurationRepository>();
         services.AddScoped<IExceptionManager, ExceptionManagerRepository>();
         services.AddScoped<IKafkaProducer, KafkaProducerRepository>();
 
         services.AddSingleton<IProducer<Null, string>>(sp =>
         {
-            var config = sp.GetRequiredService<IConfiguration>();
-            var bootstrapServers = config.GetValue<string>("Kafka:BootstrapServers") 
-                                   ?? config.GetValue<string>("AppOptions:KafkaBootstrapServers")
-                                   ?? "localhost:9092";
+            var options = sp.GetRequiredService<IOptions<KafkaOptions>>().Value;
+            var bootstrapServers = string.IsNullOrWhiteSpace(options.BootstrapServers) 
+                ? "localhost:9092" : options.BootstrapServers;
 
             var producerConfig = new ProducerConfig
             {
@@ -51,6 +51,8 @@ public static class InfrastructureServiceCollectionExtensions
             : iConfiguration.GetSection("Application");
 
         services.Configure<ApplicationOptions>(appOptionsSection);
+        services.Configure<CryptoOptions>(iConfiguration.GetSection("DataProtection"));
+        services.Configure<KafkaOptions>(iConfiguration.GetSection("Kafka"));
 
         services.PostConfigure<ApplicationOptions>(options =>
         {

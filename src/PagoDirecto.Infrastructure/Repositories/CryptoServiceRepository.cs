@@ -2,8 +2,9 @@ using PagoDirecto.Application.Extensions;
 using PagoDirecto.Domain.Entities;
 using PagoDirecto.Domain.Enums;
 using PagoDirecto.Application.Interfaces;
+using PagoDirecto.Application.Configuration;
 using Microsoft.AspNetCore.DataProtection;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using System;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
@@ -14,16 +15,16 @@ namespace PagoDirecto.Infrastructure.Repositories
     internal class CryptoServiceRepository : ICryptoService
     {
         protected readonly IDataProtectionProvider _iDataProtectionProvider;
-        protected readonly IConfiguration _iConfiguration;
+        protected readonly CryptoOptions _dataProtectionOptions;
         private readonly ILogger<CryptoServiceRepository> _logger;
         
         public CryptoServiceRepository(
             IDataProtectionProvider iDataProtectionProvider, 
-            IConfiguration iConfiguration,
+            IOptions<CryptoOptions> dataProtectionOptions,
             ILogger<CryptoServiceRepository> logger)
         {
             _iDataProtectionProvider = iDataProtectionProvider;
-            _iConfiguration = iConfiguration;
+            _dataProtectionOptions = dataProtectionOptions.Value;
             _logger = logger;
         }
 
@@ -34,7 +35,8 @@ namespace PagoDirecto.Infrastructure.Repositories
 
             try
             {
-                string purpose = _iConfiguration.GetValue<string>("DataProtection:EncryptKey") ?? "PagoDirecto.DefaultProtection";
+                string purpose = string.IsNullOrWhiteSpace(_dataProtectionOptions.EncryptKey) 
+                    ? "PagoDirecto.DefaultProtection" : _dataProtectionOptions.EncryptKey;
                 var dataProtectionProvider = _iDataProtectionProvider.CreateProtector(purpose);
 
                 var resultadoApi = new Result()
@@ -69,7 +71,8 @@ namespace PagoDirecto.Infrastructure.Repositories
 
             try
             {
-                string purpose = _iConfiguration.GetValue<string>("DataProtection:EncryptKey") ?? "PagoDirecto.DefaultProtection";
+                string purpose = string.IsNullOrWhiteSpace(_dataProtectionOptions.EncryptKey) 
+                    ? "PagoDirecto.DefaultProtection" : _dataProtectionOptions.EncryptKey;
                 var dataProtectionProvider = _iDataProtectionProvider.CreateProtector(purpose);
 
                 var resultadoApi = new Result()

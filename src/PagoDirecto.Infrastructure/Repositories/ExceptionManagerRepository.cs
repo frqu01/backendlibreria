@@ -46,7 +46,7 @@ namespace PagoDirecto.Infrastructure.Repositories
 
                 if (ex.Error.Data["Result"] != null)
                 {
-                    resultadoApi = ex.Error.Data["Result"] as Result;
+                    resultadoApi = ex.Error.Data["Result"] as Result ?? new Result();
                     ex.Error.Data["Result"] = null;
                 }
                 else
@@ -57,7 +57,7 @@ namespace PagoDirecto.Infrastructure.Repositories
                         {
                             IsSuccess = false,
                             ResponseMessage = ex.Error.Message == null ? "" : ex.Error.Message, //MessageTypeApi.UnhandledException.GetString() + ,
-                            ResponseMessageDetail = ex.Error.InnerException == null ? null : ex.Error.InnerException.Message,
+                            ResponseMessageDetail = ex.Error.InnerException?.Message ?? string.Empty,
                             NotificationTypeId = NotificationType.Error
                         }
                     };

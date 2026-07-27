@@ -51,20 +51,23 @@ namespace PagoDirecto.Infrastructure.Repositories
             //Ejecutar procedimiento almacenado 
             var sqlParameters = ListaParameters(procedimientoAlmacenadoApi.Parameters, listaParametersProcedimiento);
 
-            procedimientoAlmacenadoApi.DbCommand.Parameters.Clear();
-            procedimientoAlmacenadoApi.DbCommand.CommandTimeout = 0;
-            procedimientoAlmacenadoApi.DbCommand.CommandType = CommandType.StoredProcedure;
-            procedimientoAlmacenadoApi.DbCommand.CommandText = nombreProcedimientoCompleto;
-            procedimientoAlmacenadoApi.DbCommand.Parameters.AddRange(sqlParameters.ToArray());
+            if (procedimientoAlmacenadoApi.DbCommand != null)
+            {
+                procedimientoAlmacenadoApi.DbCommand.Parameters.Clear();
+                procedimientoAlmacenadoApi.DbCommand.CommandTimeout = 0;
+                procedimientoAlmacenadoApi.DbCommand.CommandType = CommandType.StoredProcedure;
+                procedimientoAlmacenadoApi.DbCommand.CommandText = nombreProcedimientoCompleto;
+                procedimientoAlmacenadoApi.DbCommand.Parameters.AddRange(sqlParameters.ToArray());
+            }
 
             Result resultadoApi = new();
 
-            using (var dr = await procedimientoAlmacenadoApi.DbCommand.ExecuteReaderAsync())
+            using (var dr = await procedimientoAlmacenadoApi.DbCommand!.ExecuteReaderAsync())
             {
                 DatabaseMapping<T> mapeoBaseDatoApi = LecturaBaseData<T>(dr);
                 resultadoApi = new Result()
                 {
-                    Data = mapeoBaseDatoApi.Records.ToList(),
+                    Data = mapeoBaseDatoApi.Records?.ToList() ?? new List<T>(),
                     RequestStatus = new RequestStatus()
                     {
                         IsSuccess = true,
