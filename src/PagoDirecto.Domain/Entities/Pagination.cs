@@ -1,4 +1,4 @@
-﻿using PagoDirecto.Domain.Enums;
+using PagoDirecto.Domain.Enums;
 using FluentValidation;
 
 namespace PagoDirecto.Domain.Entities;
@@ -9,8 +9,6 @@ public record Pagination
     public int PageSize { get; set; } = 50;
     public string SortBy { get; set; } = string.Empty;
     public string SortDirection { get; set; } = "ASC";
-    public long UserRecordId { get; set; }
-    public int CompanyRecordId { get; set; }
 }
 
 public class PaginationValidator : AbstractValidator<Pagination>
@@ -38,18 +36,6 @@ public class PaginationValidator : AbstractValidator<Pagination>
             .NotEmpty().WithMessage("Sort direction cannot be empty.")
             .Must(x => x != null && (x.ToUpper() == "ASC" || x.ToUpper() == "DESC"))
             .WithMessage("Sort direction must be 'ASC' or 'DESC'.");
-
-        RuleFor(t => t.UserRecordId)
-            .Cascade(CascadeMode.Stop)
-            .NotNull().WithMessage("User ID is required.")
-            .NotEmpty().WithMessage("User ID cannot be empty.")
-            .Must(x => x > 0).WithMessage("User ID must be greater than zero.");
-
-        RuleFor(t => t.CompanyRecordId)
-            .Cascade(CascadeMode.Stop)
-            .NotNull().WithMessage("Company ID is required.")
-            .NotEmpty().WithMessage("Company ID cannot be empty.")
-            .Must(x => x > 0).WithMessage("Company ID must be greater than zero.");
     }
 }
 
