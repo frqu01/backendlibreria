@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <IsPackable>false</IsPackable>
@@ -17,8 +17,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\PagoDirecto.Domain\PagoDirecto.Domain.csproj" />
     <ProjectReference Include="..\..\src\PagoDirecto.Application\PagoDirecto.Application.csproj" />
+    <ProjectReference Include="..\..\src\PagoDirecto.Infrastructure\PagoDirecto.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\PagoDirecto.Presentation\PagoDirecto.Presentation.csproj" />
   </ItemGroup>
 
 </Project>
