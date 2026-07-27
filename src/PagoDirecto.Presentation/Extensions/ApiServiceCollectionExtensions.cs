@@ -59,10 +59,6 @@ public static class ApiServiceCollectionExtensions
         {
             appOptions.ApplicationName = configuration.GetValue<string>("Swagger:Title") ?? "PagoDirecto API Service";
         }
-        if (string.IsNullOrEmpty(appOptions.ApplicationCode))
-        {
-            appOptions.ApplicationCode = configuration.GetValue<string>("Keys:AplicacionId") ?? string.Empty;
-        }
 
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen(options =>
@@ -108,10 +104,6 @@ public static class ApiServiceCollectionExtensions
                          ?? configuration.GetSection(nameof(ApplicationOptions)).Get<ApplicationOptions>()
                          ?? new ApplicationOptions();
 
-        if (string.IsNullOrEmpty(appOptions.ApplicationCode))
-        {
-            appOptions.ApplicationCode = configuration.GetValue<string>("Keys:AplicacionId") ?? string.Empty;
-        }
         if (string.IsNullOrEmpty(appOptions.ApplicationName))
         {
             appOptions.ApplicationName = configuration.GetValue<string>("Swagger:Title") ?? "PagoDirecto API Service";
