@@ -72,8 +72,7 @@ namespace PagoDirecto.Infrastructure.Repositories
                     {
                         IsSuccess = true,
                         ResponseMessage = ResponseMessageCorrecto(tipoEsquemaApi.ToResponseMessage(), resultadoApi.Data),
-                        NotificationType = NotificationType.Success,
-                        DataCount = mapeoBaseDatoApi.TotalRecords
+                        NotificationType = NotificationType.Success
                     }
                 };
             }

@@ -109,10 +109,7 @@ namespace PagoDirecto.Infrastructure.Repositories
         {
             return ReplyToCorrecta(ResponseMessage.RetrievedSuccessfully, dato);
         }
-        public Result ReadOk(object? dato, int cantidadDatos)
-        {
-            return ReplyToCorrecta(ResponseMessage.RetrievedSuccessfully,dato,cantidadDatos);
-        }
+
         public Result UpdateOk()
         {
             return ReplyToCorrecta(ResponseMessage.UpdatedSuccessfully);
@@ -127,13 +124,9 @@ namespace PagoDirecto.Infrastructure.Repositories
         }
         private Result ReplyToCorrecta(ResponseMessage tipoResponseMessageApi)
         {
-            return ReplyToCorrecta(tipoResponseMessageApi, null, null);
+            return ReplyToCorrecta(tipoResponseMessageApi, null);
         }
         private Result ReplyToCorrecta(ResponseMessage tipoResponseMessageApi, object? dato)
-        {
-            return ReplyToCorrecta(tipoResponseMessageApi, dato, null);
-        }
-        private Result ReplyToCorrecta(ResponseMessage tipoResponseMessageApi, object? dato, int? cantidadDatos)
         {
             return new Result()
             {
@@ -141,8 +134,7 @@ namespace PagoDirecto.Infrastructure.Repositories
                 {
                     IsSuccess = true,
                     ResponseMessage = tipoResponseMessageApi.GetString(),
-                    NotificationType = NotificationType.Success,
-                    DataCount = cantidadDatos
+                    NotificationType = NotificationType.Success
                 },
                 Data = dato
             };

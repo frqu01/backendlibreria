@@ -1,4 +1,4 @@
-﻿using PagoDirecto.Domain.Entities;
+using PagoDirecto.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -35,7 +35,7 @@ namespace PagoDirecto.Application.Interfaces
         public Result CreateOk(List<string> ids);
         public Result ReadOk();
         public Result ReadOk(object? dato);
-        public Result ReadOk(object? dato, int cantidadDatos);
+
         public Result ReadByIdOk(object? dato);
         public Result UpdateOk();
         public Result DeleteOk();

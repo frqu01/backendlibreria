@@ -8,8 +8,6 @@ public class RequestStatus
     private string _responseMessage = string.Empty;
     private string? _responseMessageDetail = null;
 
-    public int? DataCount { get; set; } = null;
-
     [DefaultValue(false)]
     public bool IsSuccess { get; set; }
 
@@ -28,4 +26,3 @@ public class RequestStatus
         set => _responseMessageDetail = string.IsNullOrWhiteSpace(value) ? null : value.EndsWith(".") ? value : value + ".";
     }
 }
-
