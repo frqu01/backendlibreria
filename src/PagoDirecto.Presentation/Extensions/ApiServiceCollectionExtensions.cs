@@ -1,4 +1,4 @@
-﻿using PagoDirecto.Domain.Entities;
+using PagoDirecto.Domain.Entities;
 using PagoDirecto.Infrastructure.Extensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
@@ -56,7 +56,7 @@ public static class ApiServiceCollectionExtensions
             {
                 Title = appOptions.ApplicationName,
                 Version = appOptions.ApplicationVersion,
-                Description = $"DocumentaciÃ³n REST para {appOptions.ApplicationName}",
+                Description = $"Documentación REST para {appOptions.ApplicationName}",
                 Contact = new OpenApiContact
                 {
                     Name = "Frank Quiroz Gil",
@@ -66,7 +66,7 @@ public static class ApiServiceCollectionExtensions
 
             options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
-                Description = "Ingrese Ãºnicamente su token JWT sin la palabra 'Bearer'. Ejemplo: '12345abcdef'",
+                Description = "Ingrese únicamente su token JWT sin la palabra 'Bearer'. Ejemplo: '12345abcdef'",
                 Name = "Authorization",
                 In = ParameterLocation.Header,
                 Type = SecuritySchemeType.Http,
