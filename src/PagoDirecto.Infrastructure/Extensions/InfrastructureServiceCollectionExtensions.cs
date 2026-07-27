@@ -1,9 +1,10 @@
-﻿using System.Reflection;
+using System.Reflection;
 using PagoDirecto.Application.Interfaces;
 using PagoDirecto.Domain.Entities;
 using PagoDirecto.Infrastructure.Repositories;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Confluent.Kafka;
 
 namespace PagoDirecto.Infrastructure.Extensions;
 
@@ -25,7 +26,21 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IAppConfiguration, AppConfigurationRepository>();
         services.AddScoped<IExceptionManager, ExceptionManagerRepository>();
         services.AddScoped<IKafkaProducer, KafkaProducerRepository>();
-        services.AddScoped<IKafkaConsumer, KafkaConsumerRepository>();
+
+        services.AddSingleton<IProducer<Null, string>>(sp =>
+        {
+            var config = sp.GetRequiredService<IConfiguration>();
+            var bootstrapServers = config.GetValue<string>("Kafka:BootstrapServers") 
+                                   ?? config.GetValue<string>("AppOptions:KafkaBootstrapServers")
+                                   ?? "localhost:9092";
+
+            var producerConfig = new ProducerConfig
+            {
+                BootstrapServers = bootstrapServers,
+                MessageTimeoutMs = 10000
+            };
+            return new ProducerBuilder<Null, string>(producerConfig).Build();
+        });
         services.AddScoped<ILogRecorder, LogRecorderRepository>();
         services.AddScoped<IObjectMapper, ObjectMapperRepository>();
         services.AddScoped<IResponseFactory, ResponseFactoryRepository>();
