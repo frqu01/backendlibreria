@@ -1,4 +1,4 @@
-﻿using PagoDirecto.Application.Extensions;
+using PagoDirecto.Application.Extensions;
 using PagoDirecto.Application.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
@@ -18,7 +18,15 @@ internal class GenericRepository<T> : IGenericRepository<T> where T : class
         _dbSet = context.Set<T>();
     }
 
-    public IQueryable<T> AsQueryable() => _dbSet;
+    public IQueryable<T> AsQueryable(bool disableTracking = false)
+    {
+        IQueryable<T> query = _dbSet;
+        if (disableTracking)
+        {
+            query = query.AsNoTracking();
+        }
+        return query;
+    }
     public async Task<List<T>> GetAllAsync() => await _dbSet.ToListAsync();
     public async Task<T?> GetByIdAsync(object id) => await _dbSet.FindAsync(id);
     public async Task AddAsync(T entity) => await _dbSet.AddAsync(entity);
