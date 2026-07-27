@@ -1,4 +1,4 @@
-﻿using PagoDirecto.Domain.Enums;
+using PagoDirecto.Domain.Enums;
 using System.ComponentModel;
 
 namespace PagoDirecto.Domain.Entities;
@@ -6,7 +6,7 @@ namespace PagoDirecto.Domain.Entities;
 public class RequestStatus
 {
     private string _responseMessage = string.Empty;
-    private string _responseMessageDetail = string.Empty;
+    private string? _responseMessageDetail = null;
 
     public int? DataCount { get; set; } = null;
 
@@ -21,10 +21,11 @@ public class RequestStatus
 
     public NotificationType NotificationTypeId { get; set; }
 
-    public string ResponseMessageDetail
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public string? ResponseMessageDetail
     {
         get => _responseMessageDetail;
-        set => _responseMessageDetail = string.IsNullOrEmpty(value) ? value : value.EndsWith(".") ? value : value + ".";
+        set => _responseMessageDetail = string.IsNullOrWhiteSpace(value) ? null : value.EndsWith(".") ? value : value + ".";
     }
 }
 
