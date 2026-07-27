@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Options;
 using PagoDirecto.Application.Extensions;
 using PagoDirecto.Domain.Entities;
 using PagoDirecto.Domain.Enums;
@@ -33,105 +33,34 @@ namespace PagoDirecto.Infrastructure.Repositories
         }
         private Result Log(string contenido, LoggerNotificationType tipoLogger)
         {
-            Result resultadoApi = new();
-
             Microsoft.Extensions.Logging.ILogger loggerApi = _iLoggerFactory.CreateLogger("LoggerApi");
-            string tipoLoggerNotificacion = tipoLogger.GetString();
-
-            contenido = $"[" + DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + $"] :: [{tipoLoggerNotificacion}] :: [Message]: " + contenido;
-
+            
             switch (tipoLogger)
             {
                 case LoggerNotificationType.Success:
-                    loggerApi.LogInformation(contenido);
-                    break;
                 case LoggerNotificationType.Information:
-                    loggerApi.LogInformation(contenido);
+                    loggerApi.LogInformation("{Message}", contenido);
                     break;
                 case LoggerNotificationType.Warning:
-                    loggerApi.LogWarning(contenido);
+                    loggerApi.LogWarning("{Message}", contenido);
                     break;
                 case LoggerNotificationType.Error:
-                    loggerApi.LogError(contenido);
+                    loggerApi.LogError("{Message}", contenido);
                     break;
                 default:
+                    loggerApi.LogInformation("{Message}", contenido);
                     break;
             }
 
-            //Validar que se haya enviado la dirección del logger
-            if (_iConfiguration.GetValue<string>("Logger:Directorio") == null || _iConfiguration.GetValue<string>("Logger:Directorio") == "")
+            return new Result
             {
-                resultadoApi.RequestStatus = new RequestStatus
+                RequestStatus = new RequestStatus()
                 {
-                    IsSuccess = false,
-                    ResponseMessage = "No se envió el valor de la variable 'Directorio' en la llave 'Logger'.",
-                    NotificationTypeId = NotificationType.Warning
-                };
-
-                return resultadoApi;
-            }
-            //Validar que se haya enviado el tipo del logger
-            if (_iConfiguration.GetValue<string>("Logger:TipoMostrado") == null || _iConfiguration.GetValue<string>("Logger:TipoMostrado") == "")
-            {
-                resultadoApi.RequestStatus = new RequestStatus
-                {
-                    IsSuccess = false,
-                    ResponseMessage = "No se envió el valor de la variable 'Tipo' en la llave 'Logger'.",
-                    NotificationTypeId = NotificationType.Warning
-                };
-
-                loggerApi.LogError(JsonConvert.SerializeObject(contenido));
-
-                return resultadoApi;
-            }
-
-            //Guardar log
-            if (_iConfiguration.GetValue<string>("Logger:TipoMostrado") == LoggerDisplayType.Console.GetString())
-            {
-                Console.OutputEncoding = Encoding.UTF8;
-                Console.WriteLine(contenido);
-                Console.ReadLine();
-
-                loggerApi.LogError(JsonConvert.SerializeObject(contenido));
-            }
-            else
-            {
-                string directorio = _iConfiguration.GetValue<string>("Logger:Directorio") + $"\\Api-" + _iConfiguration.GetValue<string>("Application:Id") + "\\";
-                string nombre = DateTime.Now.ToString("yyyy-MM-dd") + $"-Api-" + _iConfiguration.GetValue<string>("Application:Id") + ".log.txt";
-                string directorioCompleto = directorio + nombre;
-
-                if (true)
-                {
-                    if (!Directory.Exists(directorio))
-                    {
-                        Directory.CreateDirectory(directorio);
-                    }
-                    if (!File.Exists(directorioCompleto))
-                    {
-                        using FileStream fs = File.Create(directorioCompleto);
-                        using StreamWriter writer = new(fs, Encoding.UTF8);
-                        writer.Write(contenido + Environment.NewLine);
-                    }
-                    else
-                    {
-                        using StreamWriter writer = File.AppendText(directorioCompleto);
-                        writer.WriteLine(contenido);
-                    }
+                    IsSuccess = true,
+                    ResponseMessage = "Log procesado correctamente.",
+                    NotificationTypeId = NotificationType.Success
                 }
-                else
-                {
-                    loggerApi.LogError(JsonConvert.SerializeObject(contenido));
-                }
-            }
-
-            resultadoApi.RequestStatus = new RequestStatus()
-            {
-                IsSuccess = true,
-                ResponseMessage = "Logg creado correctamente.",
-                NotificationTypeId = NotificationType.Success
             };
-
-            return resultadoApi;
         }
         public Result Error(string contenido)
         {
