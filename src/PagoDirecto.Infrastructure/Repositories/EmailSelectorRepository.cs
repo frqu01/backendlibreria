@@ -9,23 +9,32 @@ using System.Linq;
 using System.Net.Mail;
 using System.Net;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace PagoDirecto.Infrastructure.Repositories
 {
     internal class EmailSelectorRepository : IEmailSelector
     {
-        public Task<Result> Gmail(Email correoApi)
+        private readonly ILogger<EmailSelectorRepository> _logger;
+
+        public EmailSelectorRepository(ILogger<EmailSelectorRepository> logger)
         {
-            return SendEmailAsync(correoApi, EmailHostType.Gmail);
+            _logger = logger;
         }
 
-        public Task<Result> Outlook(Email correoApi)
+        public Task<Result> Gmail(Email correoApi, CancellationToken cancellationToken = default)
         {
-            return SendEmailAsync(correoApi, EmailHostType.Outlook);
+            return SendEmailAsync(correoApi, EmailHostType.Gmail, cancellationToken);
         }
 
-        private async Task<Result> SendEmailAsync(Email correoApi, EmailHostType hostType)
+        public Task<Result> Outlook(Email correoApi, CancellationToken cancellationToken = default)
+        {
+            return SendEmailAsync(correoApi, EmailHostType.Outlook, cancellationToken);
+        }
+
+        private async Task<Result> SendEmailAsync(Email correoApi, EmailHostType hostType, CancellationToken cancellationToken = default)
         {
             if (correoApi == null)
                 return ErrorResult("No se enviaron los datos del correo.");
@@ -92,7 +101,7 @@ namespace PagoDirecto.Infrastructure.Repositories
                     Credentials = new NetworkCredential(correoApi.Sender, correoApi.Password)
                 };
 
-                await smtp.SendMailAsync(message);
+                await smtp.SendMailAsync(message, cancellationToken);
 
                 return new Result()
                 {
@@ -106,6 +115,9 @@ namespace PagoDirecto.Infrastructure.Repositories
             }
             catch (Exception ex)
             {
+                string destination = correoApi?.Recipients?.FirstOrDefault() ?? "Desconocido";
+                _logger.LogError(ex, "Error al intentar enviar correo vía SMTP a {Receptor}", destination);
+
                 return new Result()
                 {
                     RequestStatus = new RequestStatus()
