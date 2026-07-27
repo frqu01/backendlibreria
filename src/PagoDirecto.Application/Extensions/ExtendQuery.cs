@@ -1,4 +1,4 @@
-﻿using PagoDirecto.Domain.Enums;
+using PagoDirecto.Domain.Enums;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -52,9 +52,8 @@ namespace PagoDirecto.Application.Extensions
                 /*Call query.OrderBy(selector), with query and selector: x=> x.PropName
                   Note that we pass the selector as Expression to the method and we don't compile it.
                   By doing so EF can extract "order by" columns and generate SQL for it.*/
-                var newQuery = (IOrderedQueryable<T>)genericMethod
-                     .Invoke(genericMethod, new object[] { query, selector });
-                return newQuery;
+                var newQuery = genericMethod.Invoke(genericMethod, new object[] { query, selector }) as IOrderedQueryable<T>;
+                return newQuery ?? query;
             }
 
             return query;
