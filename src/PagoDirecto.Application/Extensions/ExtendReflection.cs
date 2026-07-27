@@ -1,14 +1,14 @@
-﻿using System;
+using System;
 
 namespace PagoDirecto.Application.Extensions;
 
 public static class ExtendReflection
 {
-    public static string GetPropertyTypeName(this object obj, string propertyName)
+    public static string? GetPropertyTypeName(this object obj, string propertyName)
     {
         if (obj == null) return null;
 
-        string tipoDato = null;
+        string? tipoDato = null;
         var type = obj.GetType();
 
         if (type.GetProperty(propertyName) == null)

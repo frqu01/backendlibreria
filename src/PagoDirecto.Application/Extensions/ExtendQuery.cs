@@ -15,8 +15,9 @@ namespace PagoDirecto.Application.Extensions
             var entityType = typeof(T);
             var queryType = tipoOrdenQueryApi == "asc" ? QueryOrderType.Ascending : QueryOrderType.Descending;
             propertyName = propertyName ?? typeof(T).Name + "Id";
+            var propertyInfo = entityType.GetProperty(propertyName);
 
-            if (entityType.GetProperty(propertyName) != null)
+            if (propertyInfo != null)
             {
                 string order = string.Empty;
                 switch (queryType)
@@ -30,7 +31,6 @@ namespace PagoDirecto.Application.Extensions
                 }
 
                 //Create x=>x.PropName
-                var propertyInfo = entityType.GetProperty(propertyName);
                 ParameterExpression arg = Expression.Parameter(entityType, "x");
                 MemberExpression property = Expression.Property(arg, propertyName);
                 var selector = Expression.Lambda(property, new ParameterExpression[] { arg });
