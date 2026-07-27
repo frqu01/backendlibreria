@@ -228,7 +228,7 @@ namespace PagoDirecto.Infrastructure.Repositories
                             ResponseMessage = "Se encontraron errores de validación.",
                             NotificationType = NotificationType.Warning
                         },
-                        ValidationErrors = errores
+                        ValidationErrors = errores.Count > 0 ? errores : null
                     };
 
                     exception.Data["Result"] = resultadoApi;

@@ -41,7 +41,7 @@ public class ValidatorFilterAttribute : ActionFilterAttribute
             var resultadoApi = new Result()
             {
                 RequestStatus = estadoSolicitudApi,
-                ValidationErrors = errores
+                ValidationErrors = errores.Count > 0 ? errores : null
             };
 
             context.Result = new JsonResult(resultadoApi)
