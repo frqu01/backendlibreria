@@ -23,12 +23,12 @@ public static class LoggingBuilderExtensions
             .MinimumLevel.Information()
             .Enrich.FromLogContext();
 
-        if (tipoMostrado == LoggerDisplayType.Console.GetString())
-        {
-            loggerConfig.WriteTo.Console(
-                outputTemplate: "[{Timestamp:dd/MM/yyyy HH:mm:ss}] :: [{Level:u3}] :: [Message]: {Message:lj}{NewLine}{Exception}");
-        }
-        else
+        // Siempre habilitamos la Consola como salida Espejo / Respaldo
+        loggerConfig.WriteTo.Console(
+            outputTemplate: "[{Timestamp:dd/MM/yyyy HH:mm:ss}] :: [{Level:u3}] :: [Message]: {Message:lj}{NewLine}{Exception}");
+
+        // Si la configuración principal no es estrictamente "Solo Consola", intentamos guardar en disco
+        if (tipoMostrado != LoggerDisplayType.Console.GetString())
         {
             if (string.IsNullOrWhiteSpace(directorio))
             {
@@ -36,7 +36,6 @@ public static class LoggingBuilderExtensions
             }
             
             // Serilog maneja rotación diaria agregando la fecha donde esté el guión. 
-            // Ej: log-20231024.txt
             string dirCompleto = Path.Combine(directorio, $"Api-{appId}", "log-.txt");
             
             loggerConfig.WriteTo.File(
