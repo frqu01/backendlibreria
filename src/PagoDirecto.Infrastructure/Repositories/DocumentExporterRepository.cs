@@ -53,7 +53,7 @@ namespace PagoDirecto.Infrastructure.Repositories
             }
         }
 
-        public Task<Result> Excel(object? listaDatos)
+        private Task<Result> Excel(object? listaDatos)
         {
             if (listaDatos == null || !(listaDatos is System.Collections.IEnumerable enumerableDatos))
                 return Task.FromResult(ErrorResult("No se envió una lista de datos válida."));
@@ -176,7 +176,7 @@ namespace PagoDirecto.Infrastructure.Repositories
             }
         }
 
-        public Task<Result> Pdf(object? listaDatos)
+        private Task<Result> Pdf(object? listaDatos)
         {
             if (listaDatos == null || !(listaDatos is System.Collections.IEnumerable enumerableDatos))
                 return Task.FromResult(ErrorResult("No se envió una lista de datos válida."));
@@ -296,7 +296,7 @@ namespace PagoDirecto.Infrastructure.Repositories
             }
         }
 
-        public Task<Result> Word(object? listaDatos)
+        private Task<Result> Word(object? listaDatos)
         {
             if (listaDatos == null || !(listaDatos is System.Collections.IEnumerable enumerableDatos))
                 return Task.FromResult(ErrorResult("No se envió una lista de datos válida."));
