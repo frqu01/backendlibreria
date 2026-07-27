@@ -1,0 +1,17 @@
+<Project>
+  <PropertyGroup>
+    <!-- Versión unificada para todos los paquetes NuGet de la librería -->
+    <Version>1.2.77</Version>
+
+    <!-- Metadatos de los paquetes NuGet -->
+    <Authors>Frank Ernesto Quiroz Gil</Authors>
+    <Company>Frank Ernesto Quiroz Gil</Company>
+    <Copyright>Frank Ernesto Quiroz Gil</Copyright>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <!-- Configuración común para todos los proyectos -->
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,53 @@
+using Furaqui.Application.Extensions;
+using Furaqui.Domain.Entities;
+using Furaqui.Domain.Enums;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
+using System.Collections.Generic;
+
+namespace Furaqui.Presentation.Filters;
+
+public class ValidatorFilterAttribute : ActionFilterAttribute
+{
+    public override void OnActionExecuting(ActionExecutingContext context)
+    {
+        if (!context.ModelState.IsValid)
+        {
+            var errores = new List<ValidationError>();
+
+            RequestStatus estadoSolicitudApi = new()
+            {
+                IsSuccess = false,
+                ResponseMessage = ResponseMessage.ValidationError.GetDescription(),
+                NotificationTypeId = NotificationType.Warning
+            };
+
+            foreach (var modelStateKey in context.ModelState.Keys)
+            {
+                var value = context.ModelState[modelStateKey];
+                if (value == null) continue;
+
+                foreach (var error in value.Errors)
+                {
+                    ValidationError erroresValidacionApi = new()
+                    {
+                        Field = modelStateKey,
+                        Message = error.ErrorMessage
+                    };
+                    errores.Add(erroresValidacionApi);
+                }
+            }
+
+            var resultadoApi = new Result()
+            {
+                RequestStatus = estadoSolicitudApi,
+                ValidationErrors = errores
+            };
+
+            context.Result = new JsonResult(resultadoApi)
+            {
+                StatusCode = 200
+            };
+        }
+    }
+}
