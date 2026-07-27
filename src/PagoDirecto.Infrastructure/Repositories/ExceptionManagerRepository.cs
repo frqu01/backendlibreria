@@ -51,13 +51,16 @@ namespace PagoDirecto.Infrastructure.Repositories
                 }
                 else
                 {
+                    var traceId = Guid.NewGuid().ToString("N").Substring(0, 8).ToUpper();
+                    ex.Error.Data["TraceId"] = traceId;
+
                     resultadoApi = new Result()
                     {
                         RequestStatus = new RequestStatus()
                         {
                             IsSuccess = false,
-                            ResponseMessage = ex.Error.Message == null ? "" : ex.Error.Message, //MessageTypeApi.UnhandledException.GetString() + ,
-                            ResponseMessageDetail = ex.Error.InnerException?.Message ?? string.Empty,
+                            ResponseMessage = "Ocurrió un error inesperado al procesar la solicitud.",
+                            ResponseMessageDetail = $"Reference ID: {traceId}",
                             NotificationTypeId = NotificationType.Error
                         }
                     };
@@ -68,7 +71,14 @@ namespace PagoDirecto.Infrastructure.Repositories
                     context.Response.StatusCode = statusCode;
                 }
 
-                _logger.LogError(ex.Error, "Excepción no controlada en la aplicación. StatusCode: {StatusCode}, Mensaje: {Mensaje}", context.Response.StatusCode, mensaje);
+                if (ex.Error.Data.Contains("TraceId"))
+                {
+                    _logger.LogError(ex.Error, "Excepción no controlada en la aplicación. StatusCode: {StatusCode}, ReferenceID: {TraceId}", context.Response.StatusCode, ex.Error.Data["TraceId"]);
+                }
+                else
+                {
+                    _logger.LogError(ex.Error, "Excepción controlada devuelta por Result. StatusCode: {StatusCode}, Mensaje: {Mensaje}", context.Response.StatusCode, mensaje);
+                }
             }
             else
             {
@@ -100,15 +110,17 @@ namespace PagoDirecto.Infrastructure.Repositories
 
             var ex = context.HttpContext.Features.Get<IExceptionHandlerPathFeature>();
             string contenido = string.Empty;
+            var traceId = Guid.NewGuid().ToString("N").Substring(0, 8).ToUpper();
 
             if (!context.HttpContext.Response.ContentLength.HasValue || context.HttpContext.Response.ContentLength == 0)
             {
-                contenido = "Código: " + context.HttpContext.Response.StatusCode.ToString() + ". " + ((HttpStatusCode)context.HttpContext.Response.StatusCode).ToString() + ". Url: " + context.HttpContext.Request.Path;
+                contenido = "Código: " + context.HttpContext.Response.StatusCode.ToString() + ". Url: " + context.HttpContext.Request.Path;
 
                 resultadoApi.RequestStatus = new RequestStatus()
                 {
                     IsSuccess = false,
-                    ResponseMessage = contenido,
+                    ResponseMessage = "Ocurrió un error en el servidor HTTP.",
+                    ResponseMessageDetail = $"Reference ID: {traceId}",
                     NotificationTypeId = NotificationType.Error
                 };
             }
@@ -119,18 +131,19 @@ namespace PagoDirecto.Infrastructure.Repositories
                 resultadoApi.RequestStatus = new RequestStatus()
                 {
                     IsSuccess = false,
-                    ResponseMessage = contenido,
+                    ResponseMessage = "Error interno crítico en el servidor.",
+                    ResponseMessageDetail = $"Reference ID: {traceId}",
                     NotificationTypeId = NotificationType.Error
                 };
             }
 
             if (ex?.Error != null)
             {
-                _logger.LogError(ex.Error, "Error en el pipeline del servidor. StatusCode: {StatusCode}, Contenido: {Contenido}", context.HttpContext.Response.StatusCode, contenido);
+                _logger.LogError(ex.Error, "Error en el pipeline del servidor. StatusCode: {StatusCode}, ReferenceID: {TraceId}", context.HttpContext.Response.StatusCode, traceId);
             }
             else
             {
-                _logger.LogError("Error en el pipeline del servidor. StatusCode: {StatusCode}, Url: {Url}, Contenido: {Contenido}", context.HttpContext.Response.StatusCode, context.HttpContext.Request.Path, contenido);
+                _logger.LogError("Error en el pipeline del servidor. StatusCode: {StatusCode}, Url: {Url}, ReferenceID: {TraceId}", context.HttpContext.Response.StatusCode, context.HttpContext.Request.Path, traceId);
             }
 
             context.HttpContext.Response.ContentType = "application/json";
