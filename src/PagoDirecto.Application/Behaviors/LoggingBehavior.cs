@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.Extensions.Logging;
 using PagoDirecto.Application.Interfaces;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,9 +9,9 @@ namespace PagoDirecto.Application.Behaviors;
 public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IRequest<TResponse>
 {
-    private readonly ILogRecorder _logger;
+    private readonly ILogger<LoggingBehavior<TRequest, TResponse>> _logger;
 
-    public LoggingBehavior(ILogRecorder logger)
+    public LoggingBehavior(ILogger<LoggingBehavior<TRequest, TResponse>> logger)
     {
         _logger = logger;
     }
@@ -19,11 +20,11 @@ public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, 
     {
         var requestName = typeof(TRequest).Name;
 
-        _logger.Information($"Manejando comando: {requestName}");
+        _logger.LogInformation("Manejando comando: {RequestName}", requestName);
 
         var response = await next();
 
-        _logger.Information($"Comando manejado: {requestName}");
+        _logger.LogInformation("Comando manejado: {RequestName}", requestName);
 
         return response;
     }

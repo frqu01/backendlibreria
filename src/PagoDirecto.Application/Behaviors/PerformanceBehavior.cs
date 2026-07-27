@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.Extensions.Logging;
 using PagoDirecto.Application.Interfaces;
 using System.Diagnostics;
 using System.Threading;
@@ -9,10 +10,10 @@ namespace PagoDirecto.Application.Behaviors;
 public class PerformanceBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IRequest<TResponse>
 {
-    private readonly ILogRecorder _logger;
+    private readonly ILogger<PerformanceBehavior<TRequest, TResponse>> _logger;
     private readonly Stopwatch _timer;
 
-    public PerformanceBehavior(ILogRecorder logger)
+    public PerformanceBehavior(ILogger<PerformanceBehavior<TRequest, TResponse>> logger)
     {
         _timer = new Stopwatch();
         _logger = logger;
@@ -31,7 +32,7 @@ public class PerformanceBehavior<TRequest, TResponse> : IPipelineBehavior<TReque
         if (elapsedMilliseconds > 500)
         {
             var requestName = typeof(TRequest).Name;
-            _logger.Warning($"Performance en {requestName}: {elapsedMilliseconds} milisegundos");
+            _logger.LogWarning("Performance degradado en {RequestName}: {ElapsedMilliseconds} milisegundos", requestName, elapsedMilliseconds);
         }
 
         return response;
