@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Net;
+using Microsoft.Extensions.Logging;
 using System.Text;
 using System.Threading.Tasks;
 using static OpenIddict.Server.OpenIddictServerEvents;
@@ -21,17 +22,16 @@ namespace PagoDirecto.Infrastructure.Repositories
 {
     internal class ExceptionManagerRepository : IExceptionManager
     {
-        private readonly ILogRecorder _iLoggerApi;
+        private readonly ILogger<ExceptionManagerRepository> _logger;
 
-        public ExceptionManagerRepository(ILogRecorder iLoggerApi)
+        public ExceptionManagerRepository(ILogger<ExceptionManagerRepository> logger)
         {
-            _iLoggerApi = iLoggerApi;
+            _logger = logger;
         }
         //Errores controlados
         public async Task HandlerExceptionApplication(HttpContext context)
         {
             Result resultadoApi = new Result();
-            string contenido = string.Empty;
             string detalle = string.Empty;
             string mensaje = string.Empty; 
 
@@ -68,7 +68,7 @@ namespace PagoDirecto.Infrastructure.Repositories
                     context.Response.StatusCode = statusCode;
                 }
 
-                contenido = mensaje + $" :: [StatusCode] :: {context.Response.StatusCode} :: [Tracer] :: {ex.Error.StackTrace}";
+                _logger.LogError(ex.Error, "Excepción no controlada en la aplicación. StatusCode: {StatusCode}, Mensaje: {Mensaje}", context.Response.StatusCode, mensaje);
             }
             else
             {
@@ -82,10 +82,8 @@ namespace PagoDirecto.Infrastructure.Repositories
                     }
                 };
 
-                contenido = $"{MessageType.UnhandledException.GetString()} :: [StatusCode] :: 500 :: [Tracer] :: No se pudo obtener el detalle del error";
+                _logger.LogError("Ocurrió una excepción no controlada, pero no se pudo obtener el detalle del IExceptionHandlerPathFeature. StatusCode: 500");
             }
-
-            _iLoggerApi.Error(contenido);
 
             context.Response.ContentType = "application/json";
 
@@ -126,7 +124,14 @@ namespace PagoDirecto.Infrastructure.Repositories
                 };
             }
 
-            _iLoggerApi.Error(contenido);
+            if (ex?.Error != null)
+            {
+                _logger.LogError(ex.Error, "Error en el pipeline del servidor. StatusCode: {StatusCode}, Contenido: {Contenido}", context.HttpContext.Response.StatusCode, contenido);
+            }
+            else
+            {
+                _logger.LogError("Error en el pipeline del servidor. StatusCode: {StatusCode}, Url: {Url}, Contenido: {Contenido}", context.HttpContext.Response.StatusCode, context.HttpContext.Request.Path, contenido);
+            }
 
             context.HttpContext.Response.ContentType = "application/json";
             await context.HttpContext.Response.WriteAsync(JsonConvert.SerializeObject(resultadoApi, Formatting.None,
@@ -214,7 +219,7 @@ namespace PagoDirecto.Infrastructure.Repositories
                     exception.Data["Result"] = resultadoApi;
                     exception.Data["StatusCode"] = 400;
 
-                    _iLoggerApi.Error("Se encontraron errores de validación.");
+                    _logger.LogWarning("Se abortó el guardado porque se encontraron {Count} errores de validación.", errores.Count);
 
                     throw exception;
                 }
