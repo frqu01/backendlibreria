@@ -1,4 +1,4 @@
-﻿using PagoDirecto.Application.Extensions;
+using PagoDirecto.Application.Extensions;
 using PagoDirecto.Domain.Entities;
 using PagoDirecto.Domain.Enums;
 using PagoDirecto.Application.Interfaces;
@@ -12,105 +12,51 @@ using iText.Layout.Properties;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Reflection;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace PagoDirecto.Infrastructure.Repositories
 {
     internal class DocumentExporterRepository : IDocumentExporter
     {
-        public async Task<Result> Exportar(object? listaDatos, ExportReportType ePagoDirectoExportReportTypeApi)
+        public Task<Result> Exportar(object? listaDatos, ExportReportType ePagoDirectoExportReportTypeApi)
         {
-            await Task.Delay(0);
-
-            Result resultadoApi = new Result();
-
-            if (!listaDatos.GetType().IsSerializable)
+            if (listaDatos == null || !(listaDatos is System.Collections.IEnumerable enumerableDatos))
             {
-                resultadoApi = new Result()
-                {
-                    RequestStatus = new RequestStatus()
-                    {
-                        IsSuccess = false,
-                        NotificationTypeId = NotificationType.Error,
-                        ResponseMessage = "No se envió una lista de datos."
-                    }
-                };
-
-                return resultadoApi;
+                return Task.FromResult(ErrorResult("No se envió una lista de datos válida."));
             }
 
-            var list = (System.Collections.IList)listaDatos;
+            var list = enumerableDatos.Cast<object>().ToList();
             if (list.Count < 1)
             {
-                resultadoApi = new Result()
-                {
-                    RequestStatus = new RequestStatus()
-                    {
-                        IsSuccess = false,
-                        NotificationTypeId = NotificationType.Error,
-                        ResponseMessage = "No se encontraron registros para exportar."
-                    }
-                };
-
-                return resultadoApi;
+                return Task.FromResult(ErrorResult("No se encontraron registros para exportar."));
             }
 
             switch (ePagoDirectoExportReportTypeApi)
             {
                 case ExportReportType.Pdf:
-                    resultadoApi = await Pdf(listaDatos);
-                    break;
+                    return Pdf(list);
                 case ExportReportType.Excel:
-                    resultadoApi = await Excel(listaDatos);
-                    break;
+                    return Excel(list);
                 case ExportReportType.Word:
-                    resultadoApi = await Word(listaDatos);
-                    break;
+                    return Word(list);
                 default:
-                    break;
+                    return Task.FromResult(ErrorResult("Tipo de exportación no soportado."));
             }
-
-            return resultadoApi;
         }
-        public async Task<Result> Excel(object? listaDatos)
+
+        public Task<Result> Excel(object? listaDatos)
         {
-            await Task.Delay(0);
+            if (listaDatos == null || !(listaDatos is System.Collections.IEnumerable enumerableDatos))
+                return Task.FromResult(ErrorResult("No se envió una lista de datos válida."));
 
-            Result resultadoApi = new Result();
-
-            if (!listaDatos.GetType().IsSerializable)
-            {
-                resultadoApi = new Result()
-                {
-                    RequestStatus = new RequestStatus()
-                    {
-                        IsSuccess = false,
-                        NotificationTypeId = NotificationType.Error,
-                        ResponseMessage = "No se envió una lista de datos."
-                    }
-                };
-
-                return resultadoApi;
-            }
-
-            var list = (System.Collections.IList)listaDatos;
+            var list = enumerableDatos.Cast<object>().ToList();
             if (list.Count < 1)
-            {
-                resultadoApi = new Result()
-                {
-                    RequestStatus = new RequestStatus()
-                    {
-                        IsSuccess = false,
-                        NotificationTypeId = NotificationType.Error,
-                        ResponseMessage = "No se encontraron registros para exportar."
-                    }
-                };
+                return Task.FromResult(ErrorResult("No se encontraron registros para exportar."));
 
-                return resultadoApi;
-            }
-
-            var primerDato = ((System.Collections.IList)listaDatos)[0];
+            var primerDato = list[0];
+            var properties = primerDato.GetType().GetProperties();
 
             string nombreArchivo = primerDato.GetType().Name
                         + DateTime.Now.ToString("yyyyMMddHHmmssfff")
@@ -124,7 +70,7 @@ namespace PagoDirecto.Infrastructure.Repositories
 
                     #region Cabecera
                     int contadorCabecera = 1;
-                    foreach (var item in primerDato.GetType().GetProperties())
+                    foreach (var item in properties)
                     {
                         sheet.Cell(1, contadorCabecera).Value = item.Name;
                         sheet.Cell(1, contadorCabecera).Style.Font.Bold = true;
@@ -140,12 +86,12 @@ namespace PagoDirecto.Infrastructure.Repositories
 
                     #region Body del excel
                     int recordIndex = 2;
-                    foreach (var data in (System.Collections.IEnumerable)listaDatos)
+                    foreach (var data in list)
                     {
                         int columnIndex = 1;
-                        foreach (var item in primerDato.GetType().GetProperties())
+                        foreach (var item in properties)
                         {
-                            var value = data.GetType().GetProperty(item.Name).GetValue(data, null) ?? "";
+                            var value = item.GetValue(data, null) ?? "";
 
                             sheet.Cell(recordIndex, columnIndex).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
                             sheet.Cell(recordIndex, columnIndex).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
@@ -195,7 +141,7 @@ namespace PagoDirecto.Infrastructure.Repositories
                     wbook.SaveAs(memoryStream);
                     memoryStream.Position = 0;
 
-                    resultadoApi = new Result()
+                    var resultadoApi = new Result()
                     {
                         RequestStatus = new RequestStatus()
                         {
@@ -210,50 +156,22 @@ namespace PagoDirecto.Infrastructure.Repositories
                             ContentType = ExportReportType.Excel.GetString()
                         }
                     };
+                    return Task.FromResult(resultadoApi);
                 }
             }
-
-            return resultadoApi;
         }
 
-        public async Task<Result> Pdf(object? listaDatos)
+        public Task<Result> Pdf(object? listaDatos)
         {
-            await Task.Delay(0);
+            if (listaDatos == null || !(listaDatos is System.Collections.IEnumerable enumerableDatos))
+                return Task.FromResult(ErrorResult("No se envió una lista de datos válida."));
 
-            Result resultadoApi = new Result();
-
-            if (!listaDatos.GetType().IsSerializable)
-            {
-                resultadoApi = new Result()
-                {
-                    RequestStatus = new RequestStatus()
-                    {
-                        IsSuccess = false,
-                        NotificationTypeId = NotificationType.Error,
-                        ResponseMessage = "No se envió una lista de datos."
-                    }
-                };
-
-                return resultadoApi;
-            }
-
-            var list = (System.Collections.IList)listaDatos;
+            var list = enumerableDatos.Cast<object>().ToList();
             if (list.Count < 1)
-            {
-                resultadoApi = new Result()
-                {
-                    RequestStatus = new RequestStatus()
-                    {
-                        IsSuccess = false,
-                        NotificationTypeId = NotificationType.Error,
-                        ResponseMessage = "No se encontraron registros para exportar."
-                    }
-                };
+                return Task.FromResult(ErrorResult("No se encontraron registros para exportar."));
 
-                return resultadoApi;
-            }
-
-            var primerDato = ((System.Collections.IList)listaDatos)[0];
+            var primerDato = list[0];
+            var properties = primerDato.GetType().GetProperties();
 
             string nombreArchivo = primerDato.GetType().Name
                         + DateTime.Now.ToString("yyyyMMddHHmmssfff")
@@ -267,15 +185,11 @@ namespace PagoDirecto.Infrastructure.Repositories
                 iText.Layout.Document document = new iText.Layout.Document(pdfDocument, iText.Kernel.Geom.PageSize.A4.Rotate());
 
                 #region Cabecera
-                int contadorCabecera = 0;
+                int contadorCabecera = properties.Length;
 
-                foreach (var item in primerDato.GetType().GetProperties())
-                {
-                    contadorCabecera++;
-                }
                 iText.Layout.Element.Table tablaGrilla = new iText.Layout.Element.Table(UnitValue.CreatePercentArray(contadorCabecera)).UseAllAvailableWidth();
 
-                foreach (var item in primerDato.GetType().GetProperties())
+                foreach (var item in properties)
                 {
                     iText.Layout.Element.Cell cell = new iText.Layout.Element.Cell()
                     .SetBackgroundColor(new DeviceGray(0.75f))
@@ -286,11 +200,11 @@ namespace PagoDirecto.Infrastructure.Repositories
                 #endregion
 
                 #region Body del pdf
-                foreach (var data in (System.Collections.IEnumerable)listaDatos)
+                foreach (var data in list)
                 {
-                    foreach (var item in primerDato.GetType().GetProperties())
+                    foreach (var item in properties)
                     {
-                        var value = data.GetType().GetProperty(item.Name).GetValue(data, null) ?? "";
+                        var value = item.GetValue(data, null) ?? "";
                         var textAlignment = new iText.Layout.Properties.TextAlignment();
 
                         switch (EnumExtensions.GetEnumByName<ExportColumnType>(item.PropertyType.Name))
@@ -339,10 +253,8 @@ namespace PagoDirecto.Infrastructure.Repositories
                 document.Close();
 
                 byte[] exportBinary = memoryStream.ToArray();
-                memoryStream.Write(exportBinary, 0, exportBinary.Length);
-                memoryStream.Position = 0;
 
-                resultadoApi = new Result()
+                var resultadoApi = new Result()
                 {
                     RequestStatus = new RequestStatus()
                     {
@@ -357,49 +269,21 @@ namespace PagoDirecto.Infrastructure.Repositories
                         ContentType = ExportReportType.Pdf.GetString()
                     }
                 };
+                return Task.FromResult(resultadoApi);
             }
-
-            return resultadoApi;
         }
 
-        public async Task<Result> Word(object? listaDatos)
+        public Task<Result> Word(object? listaDatos)
         {
-            await Task.Delay(0);
+            if (listaDatos == null || !(listaDatos is System.Collections.IEnumerable enumerableDatos))
+                return Task.FromResult(ErrorResult("No se envió una lista de datos válida."));
 
-            Result resultadoApi = new Result();
-
-            if (!listaDatos.GetType().IsSerializable)
-            {
-                resultadoApi = new Result()
-                {
-                    RequestStatus = new RequestStatus()
-                    {
-                        IsSuccess = false,
-                        NotificationTypeId = NotificationType.Error,
-                        ResponseMessage = "No se envió una lista de datos."
-                    }
-                };
-
-                return resultadoApi;
-            }
-
-            var list = (System.Collections.IList)listaDatos;
+            var list = enumerableDatos.Cast<object>().ToList();
             if (list.Count < 1)
-            {
-                resultadoApi = new Result()
-                {
-                    RequestStatus = new RequestStatus()
-                    {
-                        IsSuccess = false,
-                        NotificationTypeId = NotificationType.Error,
-                        ResponseMessage = "No se encontraron registros para exportar."
-                    }
-                };
+                return Task.FromResult(ErrorResult("No se encontraron registros para exportar."));
 
-                return resultadoApi;
-            }
-
-            var primerDato = ((System.Collections.IList)listaDatos)[0];
+            var primerDato = list[0];
+            var properties = primerDato.GetType().GetProperties();
 
             string nombreArchivo = primerDato.GetType().Name
                         + DateTime.Now.ToString("yyyyMMddHHmmssfff")
@@ -421,7 +305,7 @@ namespace PagoDirecto.Infrastructure.Repositories
 
                     #region Cabecera
                     TableRow tr1 = new TableRow();
-                    foreach (var item in primerDato.GetType().GetProperties())
+                    foreach (var item in properties)
                     {
                         TableCell tableCell = new TableCell();
                         Paragraph paragraph = new Paragraph();
@@ -444,13 +328,13 @@ namespace PagoDirecto.Infrastructure.Repositories
                     #endregion
 
                     #region Body del word
-                    foreach (var data in (System.Collections.IEnumerable)listaDatos)
+                    foreach (var data in list)
                     {
                         TableRow tableRow = new TableRow();
 
-                        foreach (var item in primerDato.GetType().GetProperties())
+                        foreach (var item in properties)
                         {
-                            var value = data.GetType().GetProperty(item.Name).GetValue(data, null) ?? "";
+                            var value = item.GetValue(data, null) ?? "";
 
                             TableCell tableCell = new TableCell();
                             Paragraph paragraph = new Paragraph();
@@ -509,53 +393,39 @@ namespace PagoDirecto.Infrastructure.Repositories
                     body.Append(table);
 
                     mainPart.Document.Save();
-                    wordDocument.Dispose();
+                } // IMPORTANTE: Cerrar el WordprocessingDocument ANTES de leer el stream
 
-                    memoryStream.Seek(0, SeekOrigin.Begin);
+                byte[] exportWord = memoryStream.ToArray();
 
-                    using (MemoryStream memoryStreamAux = new MemoryStream())
+                var resultadoApi = new Result()
+                {
+                    RequestStatus = new RequestStatus()
                     {
-                        memoryStream.CopyTo(memoryStreamAux);
-                        byte[] exportWord = memoryStreamAux.ToArray();
-
-                        resultadoApi = new Result()
-                        {
-                            RequestStatus = new RequestStatus()
-                            {
-                                IsSuccess = true,
-                                NotificationTypeId = NotificationType.Success,
-                                ResponseMessage = "Exportado correctamente."
-                            },
-                            Data = new ExportFile()
-                            {
-                                Content = exportWord,
-                                FileName = nombreArchivo,
-                                ContentType = ExportReportType.Word.GetString()
-                            }
-                        };
+                        IsSuccess = true,
+                        NotificationTypeId = NotificationType.Success,
+                        ResponseMessage = "Exportado correctamente."
+                    },
+                    Data = new ExportFile()
+                    {
+                        Content = exportWord,
+                        FileName = nombreArchivo,
+                        ContentType = ExportReportType.Word.GetString()
                     }
-                }
-            }
+                };
 
-            return resultadoApi;
+                return Task.FromResult(resultadoApi);
+            }
         }
-        private void Cabecera()
+
+        private static Result ErrorResult(string message)
         {
-            Paragraph paragraph = new Paragraph();
-            Run run = new Run();
-            RunProperties runProperties = new RunProperties()
+            return new Result()
             {
-                Bold = new Bold(),
-                FontSize = new FontSize()
+                RequestStatus = new RequestStatus()
                 {
-                    Val = new StringValue("32")
-                }
-            };
-            ParagraphProperties paragraphProperties = new ParagraphProperties()
-            {
-                Justification = new Justification()
-                {
-                    Val = JustificationValues.Center
+                    IsSuccess = false,
+                    NotificationTypeId = NotificationType.Error,
+                    ResponseMessage = message
                 }
             };
         }
@@ -604,4 +474,3 @@ namespace PagoDirecto.Infrastructure.Repositories
         }
     }
 }
-
