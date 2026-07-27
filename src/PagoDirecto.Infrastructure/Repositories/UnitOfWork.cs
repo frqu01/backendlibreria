@@ -1,4 +1,4 @@
-﻿using PagoDirecto.Application.Extensions;
+using PagoDirecto.Application.Extensions;
 using PagoDirecto.Application.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -38,7 +38,9 @@ internal class UnitOfWork : IUnitOfWork
 
     public void Dispose()
     {
-        _context.Dispose();
+        // NO debemos hacer Dispose del _context manualmente aquí, 
+        // ya que fue inyectado por DI y el framework se encarga de su ciclo de vida (Scoped).
+        // Si lo destruimos nosotros, otros servicios en la misma petición fallarán con ObjectDisposedException.
         GC.SuppressFinalize(this);
     }
 }

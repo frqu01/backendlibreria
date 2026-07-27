@@ -29,9 +29,27 @@ internal class GenericRepository<T> : IGenericRepository<T> where T : class
     }
     public async Task<List<T>> GetAllAsync() => await _dbSet.ToListAsync();
     public async Task<T?> GetByIdAsync(object id) => await _dbSet.FindAsync(id);
+    
+    public async Task<T?> FirstOrDefaultAsync(System.Linq.Expressions.Expression<System.Func<T, bool>> predicate, bool disableTracking = false)
+    {
+        IQueryable<T> query = _dbSet;
+        if (disableTracking)
+        {
+            query = query.AsNoTracking();
+        }
+        return await query.FirstOrDefaultAsync(predicate);
+    }
+    
+    public async Task<bool> AnyAsync(System.Linq.Expressions.Expression<System.Func<T, bool>> predicate) 
+        => await _dbSet.AnyAsync(predicate);
+
     public async Task AddAsync(T entity) => await _dbSet.AddAsync(entity);
     public async Task AddRangeAsync(IEnumerable<T> entities) => await _dbSet.AddRangeAsync(entities);
+    
+    public void Update(T entity) => _dbSet.Update(entity);
     public void UpdateRange(IEnumerable<T> entities) => _dbSet.UpdateRange(entities);
+    
+    public void Remove(T entity) => _dbSet.Remove(entity);
     public void RemoveRange(IEnumerable<T> entities) => _dbSet.RemoveRange(entities);
 }
 
