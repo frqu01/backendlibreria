@@ -1,4 +1,4 @@
-﻿using PagoDirecto.Application.Extensions;
+using PagoDirecto.Application.Extensions;
 using PagoDirecto.Domain.Entities;
 using PagoDirecto.Domain.Enums;
 using PagoDirecto.Application.Interfaces;
@@ -22,51 +22,40 @@ namespace PagoDirecto.Infrastructure.Repositories
             _iDataProtectionProvider = iDataProtectionProvider;
             _iConfiguration = iConfiguration;
         }
-        public async Task<Result> DecryptAsync(string texto)
+        public Task<Result> DecryptAsync(string texto)
         {
-            await Task.Delay(0);
-
-            Result resultadoApi = new Result();
-
             var dataProtectionProvider = _iDataProtectionProvider.CreateProtector(_iConfiguration.GetValue<string>("DataProtection:EncryptKey"));
 
-            resultadoApi = new Result()
+            var resultadoApi = new Result()
             {
                 RequestStatus = new RequestStatus()
                 {
-                    IsSuccess = false,
+                    IsSuccess = true,
                     NotificationTypeId = NotificationType.Success,
-                    ResponseMessage = "Se encriptó correctamente."
+                    ResponseMessage = "Se desencriptó correctamente."
                 },
                 Data = texto == null ? null : dataProtectionProvider.Unprotect(texto)
             };
 
-
-            return resultadoApi;
+            return Task.FromResult(resultadoApi);
         }
 
-        public async Task<Result> EncryptAsync(string texto)
+        public Task<Result> EncryptAsync(string texto)
         {
-            await Task.Delay(0);
-
-            Result resultadoApi = new Result();
-
             var dataProtectionProvider = _iDataProtectionProvider.CreateProtector(_iConfiguration.GetValue<string>("DataProtection:EncryptKey"));
 
-
-            resultadoApi = new Result()
+            var resultadoApi = new Result()
             {
                 RequestStatus = new RequestStatus()
                 {
-                    IsSuccess = false,
+                    IsSuccess = true,
                     NotificationTypeId = NotificationType.Success,
                     ResponseMessage = "Se encriptó correctamente."
                 },
                 Data = texto == null ? null : dataProtectionProvider.Protect(texto)
             };
 
-
-            return resultadoApi;
+            return Task.FromResult(resultadoApi);
         }
     }
 }
