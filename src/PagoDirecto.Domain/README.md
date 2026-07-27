@@ -1,11 +1,15 @@
-﻿# PagoDirectoApi.Domain
+# PagoDirecto.Domain
 
-Capa de Dominio para la librerÃ­a **PagoDirectoApi**.
+Este paquete representa el núcleo y corazón de la arquitectura (Core). 
 
-Contiene las entidades puras de dominio (`CorreoApi`, `ResultadoApi`, `PaginacionApi`, etc.) y enumeraciones (`EPagoDirectoTipo...`) libres de dependencias de infraestructura.
+Contiene:
+- **Entidades (Entities)**: Clases que representan el modelo de datos transversal (`Email`, `Pagination`, `Result`, etc.).
+- **Enumeraciones (Enums)**: Constantes globales de configuración e identificación para toda la organización.
 
-## InstalaciÃ³n
-```bash
-dotnet add package PagoDirectoApi.Domain
-```
+## Características
 
+- **Sin dependencias tecnológicas**: No tiene referencias a Entity Framework, SQL, ni APIs web. Su pureza garantiza que las reglas de negocio no estén acopladas a la infraestructura.
+- **Validaciones Integradas**: Utiliza `FluentValidation` para asegurar que las entidades cumplan con las reglas esenciales.
+
+## ¿Cuándo usar este paquete?
+Debe ser referenciado por la capa **Application** de tu microservicio o por cualquier proyecto de Dominio que requiera heredar los modelos base de la empresa.
