@@ -1,4 +1,4 @@
-﻿using PagoDirecto.Domain.Entities;
+using PagoDirecto.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,8 +9,8 @@ namespace PagoDirecto.Application.Interfaces
 {
     public interface IEmailSelector
     {
-        Result Outlook(Email correoApi);
-        Result Gmail(Email correoApi);
+        Task<Result> Outlook(Email correoApi);
+        Task<Result> Gmail(Email correoApi);
     }
 }
 

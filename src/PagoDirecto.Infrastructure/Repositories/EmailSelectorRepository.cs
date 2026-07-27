@@ -1,4 +1,4 @@
-﻿using PagoDirecto.Application.Extensions;
+using PagoDirecto.Application.Extensions;
 using PagoDirecto.Domain.Entities;
 using PagoDirecto.Domain.Enums;
 using PagoDirecto.Application.Interfaces;
@@ -15,258 +15,121 @@ namespace PagoDirecto.Infrastructure.Repositories
 {
     internal class EmailSelectorRepository : IEmailSelector
     {
-        public Result Gmail(Email correoApi)
+        public Task<Result> Gmail(Email correoApi)
         {
-            Result resultadoApi;
-
-            if (correoApi == null)
-            {
-                resultadoApi = new Result()
-                {
-                    RequestStatus = new RequestStatus()
-                    {
-                        IsSuccess = false,
-                        NotificationTypeId = NotificationType.Warning,
-                        ResponseMessage = "No se envió los datos del correo."
-                    }
-                };
-
-                return resultadoApi;
-            };
-
-            if (correoApi.Sender == string.Empty)
-            {
-                resultadoApi = new Result()
-                {
-                    RequestStatus = new RequestStatus()
-                    {
-                        IsSuccess = false,
-                        NotificationTypeId = NotificationType.Warning,
-                        ResponseMessage = "No se envió el emisor."
-                    }
-                };
-
-                return resultadoApi;
-            }
-
-            if (correoApi.Recipients == null || correoApi.Recipients.Count < 1)
-            {
-                resultadoApi = new Result()
-                {
-                    RequestStatus = new RequestStatus()
-                    {
-                        IsSuccess = false,
-                        NotificationTypeId = NotificationType.Warning,
-                        ResponseMessage = "No se envió el receptor."
-                    }
-                };
-
-                return resultadoApi;
-            }
-
-            if (correoApi.Body == string.Empty)
-            {
-                resultadoApi = new Result()
-                {
-                    RequestStatus = new RequestStatus()
-                    {
-                        IsSuccess = false,
-                        NotificationTypeId = NotificationType.Warning,
-                        ResponseMessage = "No se envió el cuerpo."
-                    }
-                };
-
-                return resultadoApi;
-            }
-
-            var message = new MailMessage();
-
-            SmtpClient smtp = new SmtpClient()
-            {
-                Host = EmailHostType.Outlook.GetHost(),
-                Port = EmailHostType.Outlook.GetPort(),
-                EnableSsl = true,
-                DeliveryMethod = SmtpDeliveryMethod.Network,
-                UseDefaultCredentials = false,
-                Credentials = new NetworkCredential(correoApi.Sender, correoApi.Password)
-            };
-
-            foreach (var item in correoApi.Recipients)
-            {
-                message = new MailMessage(correoApi.Sender, item);
-            }
-
-            foreach (var item in correoApi.ReplyTo)
-            {
-                message.ReplyToList.Add(item);
-            }
-
-            foreach (var item in correoApi.Cc)
-            {
-                message.CC.Add(item);
-            }
-
-            foreach (var item in correoApi.Cc)
-            {
-                message.CC.Add(item);
-            }
-
-            foreach (var item in correoApi.Bcc)
-            {
-                message.CC.Add(item);
-            }
-
-            foreach (var item in correoApi.Attachments)
-            {
-                //var filePath = "D:\\Documentos\\Frank\\Trabajos\\MDP\\Clonfluence - PAGDES-200522-2131.pdf";
-                //var provider = new FileExtensionContentTypeProvider();
-
-                //if (!provider.TryGetContentType(filePath, out var contentType))
-                //{
-                //    contentType = "application/octet-stream";
-                //}
-
-                message.Attachments.Add(new Attachment(item.AttachmentStream, item.FileName, item.FileExtensionType.GetDescription()));
-            }
-
-            message.IsBodyHtml = true;
-            message.Body = correoApi.Body;
-            smtp.Send(message);
-
-            resultadoApi = new Result()
-            {
-                RequestStatus = new RequestStatus()
-                {
-                    IsSuccess = true,
-                    NotificationTypeId = NotificationType.Success,
-                    ResponseMessage = "Email enviado correctamente."
-                }
-            };
-
-            return resultadoApi;
+            return SendEmailAsync(correoApi, EmailHostType.Gmail);
         }
 
-        public Result Outlook(Email correoApi)
+        public Task<Result> Outlook(Email correoApi)
         {
-            Result resultadoApi;
+            return SendEmailAsync(correoApi, EmailHostType.Outlook);
+        }
 
+        private async Task<Result> SendEmailAsync(Email correoApi, EmailHostType hostType)
+        {
             if (correoApi == null)
+                return ErrorResult("No se enviaron los datos del correo.");
+
+            if (string.IsNullOrWhiteSpace(correoApi.Sender))
+                return ErrorResult("No se envió el emisor.");
+
+            if (correoApi.Recipients == null || !correoApi.Recipients.Any())
+                return ErrorResult("No se envió el receptor.");
+
+            if (string.IsNullOrWhiteSpace(correoApi.Body))
+                return ErrorResult("No se envió el cuerpo.");
+
+            try
             {
-                resultadoApi = new Result()
+                using var message = new MailMessage();
+                message.From = new MailAddress(correoApi.Sender);
+                message.Subject = correoApi.Subject ?? string.Empty;
+                message.IsBodyHtml = true;
+                message.Body = correoApi.Body;
+
+                foreach (var item in correoApi.Recipients.Where(r => !string.IsNullOrWhiteSpace(r)))
+                {
+                    message.To.Add(item);
+                }
+
+                if (correoApi.ReplyTo != null)
+                {
+                    foreach (var item in correoApi.ReplyTo.Where(r => !string.IsNullOrWhiteSpace(r)))
+                        message.ReplyToList.Add(item);
+                }
+
+                if (correoApi.Cc != null)
+                {
+                    foreach (var item in correoApi.Cc.Where(c => !string.IsNullOrWhiteSpace(c)))
+                        message.CC.Add(item);
+                }
+
+                if (correoApi.Bcc != null)
+                {
+                    foreach (var item in correoApi.Bcc.Where(b => !string.IsNullOrWhiteSpace(b)))
+                        message.Bcc.Add(item);
+                }
+
+                if (correoApi.Attachments != null)
+                {
+                    foreach (var item in correoApi.Attachments)
+                    {
+                        if (item.AttachmentStream != null)
+                        {
+                            item.AttachmentStream.Position = 0; // Prevenir errores si el stream ya fue leído
+                            message.Attachments.Add(new Attachment(item.AttachmentStream, item.FileName, item.FileExtensionType.GetDescription()));
+                        }
+                    }
+                }
+
+                using var smtp = new SmtpClient()
+                {
+                    Host = hostType.GetHost(),
+                    Port = hostType.GetPort(),
+                    EnableSsl = true,
+                    DeliveryMethod = SmtpDeliveryMethod.Network,
+                    UseDefaultCredentials = false,
+                    Credentials = new NetworkCredential(correoApi.Sender, correoApi.Password)
+                };
+
+                await smtp.SendMailAsync(message);
+
+                return new Result()
+                {
+                    RequestStatus = new RequestStatus()
+                    {
+                        IsSuccess = true,
+                        NotificationTypeId = NotificationType.Success,
+                        ResponseMessage = "Email enviado correctamente."
+                    }
+                };
+            }
+            catch (Exception ex)
+            {
+                return new Result()
                 {
                     RequestStatus = new RequestStatus()
                     {
                         IsSuccess = false,
-                        NotificationTypeId = NotificationType.Warning,
-                        ResponseMessage = "No se envió los datos del correo."
+                        NotificationTypeId = NotificationType.Error,
+                        ResponseMessage = "Ocurrió un error al enviar el correo.",
+                        ResponseMessageDetail = ex.Message
                     }
                 };
-
-                return resultadoApi;
-            };
-
-            if (correoApi.Sender == string.Empty)
-            {
-                resultadoApi = new Result()
-                {
-                    RequestStatus = new RequestStatus()
-                    {
-                        IsSuccess = false,
-                        NotificationTypeId = NotificationType.Warning,
-                        ResponseMessage = "No se envió el emisor."
-                    }
-                };
-
-                return resultadoApi;
             }
+        }
 
-            if (correoApi.Recipients == null || correoApi.Recipients.Count < 1)
-            {
-                resultadoApi = new Result()
-                {
-                    RequestStatus = new RequestStatus()
-                    {
-                        IsSuccess = false,
-                        NotificationTypeId = NotificationType.Warning,
-                        ResponseMessage = "No se envió el receptor."
-                    }
-                };
-
-                return resultadoApi;
-            }
-
-            if (correoApi.Body == string.Empty)
-            {
-                resultadoApi = new Result()
-                {
-                    RequestStatus = new RequestStatus()
-                    {
-                        IsSuccess = false,
-                        NotificationTypeId = NotificationType.Warning,
-                        ResponseMessage = "No se envió el cuerpo."
-                    }
-                };
-
-                return resultadoApi;
-            }
-
-            var message = new MailMessage();
-
-            SmtpClient smtp = new SmtpClient()
-            {
-                Host = EmailHostType.Gmail.GetHost(),
-                Port = EmailHostType.Gmail.GetPort(),
-                EnableSsl = true,
-                DeliveryMethod = SmtpDeliveryMethod.Network,
-                UseDefaultCredentials = false,
-                Credentials = new NetworkCredential(correoApi.Sender, correoApi.Password)
-            };
-
-            foreach (var item in correoApi.Recipients)
-            {
-                message = new MailMessage(correoApi.Sender, item);
-            }
-
-            foreach (var item in correoApi.ReplyTo)
-            {
-                message.ReplyToList.Add(item);
-            }
-
-            //foreach (var item in correoApi.Cc)
-            //{
-            //    message.CC.Add(item);
-            //}
-
-            foreach (var item in correoApi.Cc)
-            {
-                message.CC.Add(item);
-            }
-
-            foreach (var item in correoApi.Bcc)
-            {
-                message.CC.Add(item);
-            }
-
-            foreach (var item in correoApi.Attachments)
-            {
-                message.Attachments.Add(new Attachment(item.AttachmentStream, item.FileName, item.FileExtensionType.GetDescription()));
-            }
-
-            message.IsBodyHtml = true;
-            message.Body = correoApi.Body;
-            smtp.Send(message);
-
-            resultadoApi = new Result()
+        private static Result ErrorResult(string message)
+        {
+            return new Result()
             {
                 RequestStatus = new RequestStatus()
                 {
-                    IsSuccess = true,
-                    NotificationTypeId = NotificationType.Success,
-                    ResponseMessage = "Email enviado correctamente."
+                    IsSuccess = false,
+                    NotificationTypeId = NotificationType.Warning,
+                    ResponseMessage = message
                 }
             };
-
-            return resultadoApi;
         }
     }
 }
