@@ -18,6 +18,21 @@ public static class ApiServiceCollectionExtensions
         return services;
     }
 
+    public static IServiceCollection AddPagoDirectoValidationFilter(this IServiceCollection services)
+    {
+        services.Configure<Microsoft.AspNetCore.Mvc.ApiBehaviorOptions>(options =>
+        {
+            options.SuppressModelStateInvalidFilter = true;
+        });
+
+        services.AddControllers(options =>
+        {
+            options.Filters.Add<PagoDirecto.Presentation.Filters.ValidatorFilterAttribute>();
+        });
+
+        return services;
+    }
+
     public static IApplicationBuilder UsePagoDirectoLibrary(this IApplicationBuilder app, IConfiguration configuration)
     {
         app.UsePagoDirectoSwagger(configuration);
