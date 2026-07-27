@@ -1,4 +1,4 @@
-﻿using PagoDirecto.Application.Extensions;
+using PagoDirecto.Application.Extensions;
 using PagoDirecto.Domain.Entities;
 using PagoDirecto.Domain.Enums;
 using PagoDirecto.Application.Interfaces;
@@ -49,27 +49,6 @@ namespace PagoDirecto.Infrastructure.Repositories
                 url = url + "?" + paramsQuery;
             }
 
-            HttpClient client = _httpClientFactory.CreateClient();
-            client.DefaultRequestHeaders.Accept.Clear();
-
-            if (solicitudServicioApi.Headers != null)
-            {
-                foreach (KeyValuePair<string, object> entry in solicitudServicioApi.Headers)
-                {
-                    client.DefaultRequestHeaders.Add(entry.Key, entry.Value?.ToString());
-                }
-            }
-
-            if (solicitudServicioApi.Authentication != null)
-            {
-                autenticationEncrypt = Convert.ToBase64String(Encoding.ASCII.GetBytes(string.Format("{0}:{1}", solicitudServicioApi.Authentication.Username, solicitudServicioApi.Authentication.Password)));
-
-                if (solicitudServicioApi.Authentication.AuthorizationType == RestAuthorizationType.BasicAuth)
-                {
-                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", autenticationEncrypt);
-                }
-            }
-
             HttpContent httpContent = null;
 
             if (solicitudServicioApi.Body != null)
@@ -85,7 +64,22 @@ namespace PagoDirecto.Infrastructure.Repositories
 
                 if (solicitudServicioApi.Body.BodyType == RestBodyType.FormData)
                 {
-                    httpContent = new FormUrlEncodedContent((IEnumerable<KeyValuePair<string, string>>)solicitudServicioApi.Body.Payload);
+                    IEnumerable<KeyValuePair<string, string>> nameValueCollection = null;
+                    if (solicitudServicioApi.Body.Payload is IEnumerable<KeyValuePair<string, string>> kvpList)
+                    {
+                        nameValueCollection = kvpList;
+                    }
+                    else if (solicitudServicioApi.Body.Payload != null)
+                    {
+                        // Fallback seguro usando serialización a diccionario
+                        var json = JsonConvert.SerializeObject(solicitudServicioApi.Body.Payload);
+                        nameValueCollection = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
+                    }
+                    
+                    if (nameValueCollection != null)
+                    {
+                        httpContent = new FormUrlEncodedContent(nameValueCollection);
+                    }
                 }
             }
 
@@ -94,6 +88,27 @@ namespace PagoDirecto.Infrastructure.Repositories
                 Content = httpContent
             };
 
+            httpRequestMessage.Headers.Accept.Clear();
+
+            if (solicitudServicioApi.Headers != null)
+            {
+                foreach (KeyValuePair<string, object> entry in solicitudServicioApi.Headers)
+                {
+                    httpRequestMessage.Headers.Add(entry.Key, entry.Value?.ToString());
+                }
+            }
+
+            if (solicitudServicioApi.Authentication != null)
+            {
+                autenticationEncrypt = Convert.ToBase64String(Encoding.ASCII.GetBytes(string.Format("{0}:{1}", solicitudServicioApi.Authentication.Username, solicitudServicioApi.Authentication.Password)));
+
+                if (solicitudServicioApi.Authentication.AuthorizationType == RestAuthorizationType.BasicAuth)
+                {
+                    httpRequestMessage.Headers.Authorization = new AuthenticationHeaderValue("Basic", autenticationEncrypt);
+                }
+            }
+
+            HttpClient client = _httpClientFactory.CreateClient();
             HttpResponseMessage httpResponseMessage;
 
             try
@@ -116,6 +131,19 @@ namespace PagoDirecto.Infrastructure.Repositories
             }
 
             response = await httpResponseMessage.Content.ReadAsStringAsync(cancellationToken);
+
+            if (!httpResponseMessage.IsSuccessStatusCode)
+            {
+                resultadoApi.RequestStatus = new RequestStatus()
+                {
+                    IsSuccess = false,
+                    ResponseMessage = $"Error de la API externa (HTTP {(int)httpResponseMessage.StatusCode})",
+                    NotificationTypeId = NotificationType.Error,
+                    ResponseMessageDetail = response 
+                };
+                resultadoApi.Data = null;
+                return resultadoApi;
+            }
 
             resultadoApi.Data = response;
 
