@@ -17,12 +17,15 @@ namespace PagoDirecto.Infrastructure.Repositories
     {
         protected readonly ILogRecorder _iLoggerApi;
         protected readonly IExceptionFactory _iExceptionFactory;
+        protected readonly IServiceProvider _serviceProvider;
+
         public DataBaseContextRepository(ILogRecorder iLoggerApi,
             IExceptionFactory iExceptionFactory,
-            IAppConfiguration iAppConfiguration)
+            IServiceProvider serviceProvider)
         {
             _iLoggerApi = iLoggerApi;
             _iExceptionFactory = iExceptionFactory;
+            _serviceProvider = serviceProvider;
         }
         
         private async Task<Result> StoreProcedure<T>(SchemaType tipoEsquemaApi, StoredProcedure procedimientoAlmacenadoApi)
@@ -95,7 +98,7 @@ namespace PagoDirecto.Infrastructure.Repositories
 
             return mensajeReplyToCorrecto;
         }
-        private static object ValidarParameterParaBd(object valor)
+        private static object ValidarParameterParaBd(object? valor)
         {
             if (valor == null || valor.ToString() == string.Empty || valor.ToString() == "-1")
             {
@@ -149,7 +152,7 @@ namespace PagoDirecto.Infrastructure.Repositories
                 default:
                     while (dbDataReader.Read())
                     {
-                        var entidad = (T)Activator.CreateInstance(typeof(T));
+                        var entidad = (T)Activator.CreateInstance(typeof(T))!;
 
                         for (int i = 0; i < dbDataReader.FieldCount; i++)
                         {
@@ -185,7 +188,7 @@ namespace PagoDirecto.Infrastructure.Repositories
 
                                         if (prop.Name == "TotalRecords")
                                         {
-                                            mapeoBaseData.TotalRecords = int.Parse(value.ToString());
+                                            mapeoBaseData.TotalRecords = int.Parse(value?.ToString() ?? "0");
                                             value = null;
                                         }
 
@@ -199,7 +202,7 @@ namespace PagoDirecto.Infrastructure.Repositories
 
                                         if (prop.Name == "TotalRecords")
                                         {
-                                            mapeoBaseData.TotalRecords = int.Parse(value.ToString());
+                                            mapeoBaseData.TotalRecords = int.Parse(value?.ToString() ?? "0");
                                             value = null;
                                         }
 
@@ -227,6 +230,7 @@ namespace PagoDirecto.Infrastructure.Repositories
         private List<string> ListaParameters(object? obj)
         {
             List<string> vs = new();
+            if (obj == null) return vs;
 
             foreach (var propiedad in obj.GetType().GetProperties())
             {
@@ -254,6 +258,7 @@ namespace PagoDirecto.Infrastructure.Repositories
         private List<SqlParameter> ListaParameters(object? obj, List<string> parametros)
         {
             var resultadoSqlParameter = new List<SqlParameter>();
+            if (obj == null) return resultadoSqlParameter;
 
             foreach (var parametro in parametros)
             {
@@ -264,16 +269,18 @@ namespace PagoDirecto.Infrastructure.Repositories
                 {
                     foreach (var propiedad in obj.GetType().GetProperties())
                     {
-                        var clase = obj.GetType().GetProperty(propiedad.Name).GetValue(obj, null);
+                        var clase = obj.GetType().GetProperty(propiedad.Name)?.GetValue(obj, null);
                         if (clase != null && clase.GetType().GetProperty(parametro[1..]) != null)
                         {
-                            param.Value = ValidarParameterParaBd(clase.GetType().GetProperty(parametro[1..]).GetValue(clase, null));
+                            var propValue = clase.GetType().GetProperty(parametro[1..])?.GetValue(clase, null);
+                            param.Value = ValidarParameterParaBd(propValue);
                         }
                     }
                 }
                 else
                 {
-                    param.Value = ValidarParameterParaBd(obj.GetType().GetProperty(parametro[1..]).GetValue(obj, null));
+                    var propValue = obj.GetType().GetProperty(parametro[1..])?.GetValue(obj, null);
+                    param.Value = ValidarParameterParaBd(propValue);
                 }
 
                 resultadoSqlParameter.Add(param);
@@ -300,11 +307,11 @@ namespace PagoDirecto.Infrastructure.Repositories
 
         public DbCommand Connection<D>()
         {
-            DbContext dbContext = (DbContext)Activator.CreateInstance(typeof(D));
+            DbContext? dbContext = _serviceProvider.GetService(typeof(D)) as DbContext;
             //Validar
             if (dbContext == null)
             {
-                throw _iExceptionFactory.Warning("La Conexión no fue enviada en Infraestructura.");
+                throw _iExceptionFactory.Warning($"El DbContext del tipo {typeof(D).Name} no está registrado en la Inyección de Dependencias.");
             }
             DbCommand dbCommand = dbContext.Database.GetDbConnection().CreateCommand();
             var conn = new DbConnectionHandler(dbCommand);
