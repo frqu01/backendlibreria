@@ -95,8 +95,13 @@ namespace PagoDirecto.Infrastructure.Repositories
                 message.Body = builder.ToMessageBody();
 
                 using var smtp = new SmtpClient();
-                await smtp.ConnectAsync(hostType.GetHost(), hostType.GetPort(), MailKit.Security.SecureSocketOptions.StartTls, cancellationToken);
-                await smtp.AuthenticateAsync(correoApi.Sender, correoApi.Password, cancellationToken);
+                await smtp.ConnectAsync(hostType.GetHost(), hostType.GetPort(), MailKit.Security.SecureSocketOptions.Auto, cancellationToken);
+                
+                if (!string.IsNullOrWhiteSpace(correoApi.Password))
+                {
+                    await smtp.AuthenticateAsync(correoApi.Sender, correoApi.Password, cancellationToken);
+                }
+
                 await smtp.SendAsync(message, cancellationToken);
                 await smtp.DisconnectAsync(true, cancellationToken);
 
