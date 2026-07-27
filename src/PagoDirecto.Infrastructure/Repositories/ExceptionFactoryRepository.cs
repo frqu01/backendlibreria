@@ -1,4 +1,4 @@
-﻿using PagoDirecto.Application.Interfaces;
+using PagoDirecto.Application.Interfaces;
 using PagoDirecto.Domain.Entities;
 using PagoDirecto.Domain.Enums;
 using System;
@@ -22,7 +22,7 @@ internal class ExceptionFactoryRepository : IExceptionFactory
             {
                 IsSuccess = false,
                 ResponseMessage = errorMessage,
-                NotificationTypeId = notificationType
+                NotificationType = notificationType
             }
         };
         return excepcion;

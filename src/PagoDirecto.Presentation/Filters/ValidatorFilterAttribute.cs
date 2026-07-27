@@ -19,7 +19,7 @@ public class ValidatorFilterAttribute : ActionFilterAttribute
             {
                 IsSuccess = false,
                 ResponseMessage = ResponseMessage.ValidationError.GetDescription(),
-                NotificationTypeId = NotificationType.Warning
+                NotificationType = NotificationType.Warning
             };
 
             foreach (var modelStateKey in context.ModelState.Keys)

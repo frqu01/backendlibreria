@@ -76,7 +76,7 @@ namespace PagoDirecto.Infrastructure.Repositories
                         _ => true
                     },
                     ResponseMessage = mensaje,
-                    NotificationTypeId = tipoNotificacionApi
+                    NotificationType = tipoNotificacionApi
                 },
                 Data = dato
             };
@@ -89,7 +89,7 @@ namespace PagoDirecto.Infrastructure.Repositories
                 {
                     IsSuccess = false,
                     ResponseMessage = string.Format(ResponseMessage.RecordAlreadyExists.GetString(), campo),
-                    NotificationTypeId = NotificationType.Warning
+                    NotificationType = NotificationType.Warning
                 }
             };
         }
@@ -141,7 +141,7 @@ namespace PagoDirecto.Infrastructure.Repositories
                 {
                     IsSuccess = true,
                     ResponseMessage = tipoResponseMessageApi.GetString(),
-                    NotificationTypeId = NotificationType.Success,
+                    NotificationType = NotificationType.Success,
                     DataCount = cantidadDatos
                 },
                 Data = dato
@@ -159,7 +159,7 @@ namespace PagoDirecto.Infrastructure.Repositories
                 {
                     IsSuccess = false,
                     ResponseMessage = ResponseMessage.ValidationError.GetString(),
-                    NotificationTypeId = NotificationType.Warning
+                    NotificationType = NotificationType.Warning
                 },
                 ValidationErrors = new()
                 {
@@ -184,7 +184,7 @@ namespace PagoDirecto.Infrastructure.Repositories
                 {
                     IsSuccess = false,
                     ResponseMessage = string.Format(ResponseMessage.NotFound.GetString(), campo),
-                    NotificationTypeId = NotificationType.Warning
+                    NotificationType = NotificationType.Warning
                 }
             };
         }
@@ -229,7 +229,7 @@ namespace PagoDirecto.Infrastructure.Repositories
                 {
                     IsSuccess = false,
                     ResponseMessage = string.Format(ResponseMessage.RecordAlreadyExists.GetString(), "La lista"),
-                    NotificationTypeId = NotificationType.Warning
+                    NotificationType = NotificationType.Warning
                 },
                 Data = dato
             };

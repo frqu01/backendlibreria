@@ -19,7 +19,7 @@ public class RequestStatus
         set => _responseMessage = string.IsNullOrEmpty(value) ? value : value.EndsWith(".") ? value : value + ".";
     }
 
-    public NotificationType NotificationTypeId { get; set; }
+    public NotificationType NotificationType { get; set; }
 
     [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
     public string? ResponseMessageDetail

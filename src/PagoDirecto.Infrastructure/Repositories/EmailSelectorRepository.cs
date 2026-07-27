@@ -110,7 +110,7 @@ namespace PagoDirecto.Infrastructure.Repositories
                     RequestStatus = new RequestStatus()
                     {
                         IsSuccess = true,
-                        NotificationTypeId = NotificationType.Success,
+                        NotificationType = NotificationType.Success,
                         ResponseMessage = "Email enviado correctamente."
                     }
                 };
@@ -125,7 +125,7 @@ namespace PagoDirecto.Infrastructure.Repositories
                     RequestStatus = new RequestStatus()
                     {
                         IsSuccess = false,
-                        NotificationTypeId = NotificationType.Error,
+                        NotificationType = NotificationType.Error,
                         ResponseMessage = "Ocurrió un error al enviar el correo.",
                         ResponseMessageDetail = ex.Message
                     }
@@ -140,7 +140,7 @@ namespace PagoDirecto.Infrastructure.Repositories
                 RequestStatus = new RequestStatus()
                 {
                     IsSuccess = false,
-                    NotificationTypeId = NotificationType.Warning,
+                    NotificationType = NotificationType.Warning,
                     ResponseMessage = message
                 }
             };

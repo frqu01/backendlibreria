@@ -53,7 +53,7 @@ namespace PagoDirecto.Infrastructure.Repositories
                 {
                     IsSuccess = true,
                     ResponseMessage = "Log procesado correctamente.",
-                    NotificationTypeId = NotificationType.Success
+                    NotificationType = NotificationType.Success
                 }
             };
         }

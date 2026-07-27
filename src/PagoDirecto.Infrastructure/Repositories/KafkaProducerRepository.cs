@@ -38,7 +38,7 @@ internal class KafkaProducerRepository : IKafkaProducer
             {
                 IsSuccess = true,
                 ResponseMessage = $"Message enviado a {topic} -res: {result.Offset}",
-                NotificationTypeId = NotificationType.Success
+                NotificationType = NotificationType.Success
             };
         }
         catch (ProduceException<Null, string> e)
@@ -48,7 +48,7 @@ internal class KafkaProducerRepository : IKafkaProducer
             {
                 IsSuccess = false,
                 ResponseMessage = $"Fallo al enviar mensaje a Kafka: {e.Error.Reason}",
-                NotificationTypeId = NotificationType.Error
+                NotificationType = NotificationType.Error
             };
         }
         catch (Exception ex)
@@ -58,7 +58,7 @@ internal class KafkaProducerRepository : IKafkaProducer
             {
                 IsSuccess = false,
                 ResponseMessage = $"Error inesperado al enviar mensaje: {ex.Message}",
-                NotificationTypeId = NotificationType.Error
+                NotificationType = NotificationType.Error
             };
         }
 

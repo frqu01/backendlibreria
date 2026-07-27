@@ -28,6 +28,10 @@ public static class ApiServiceCollectionExtensions
         services.AddControllers(options =>
         {
             options.Filters.Add<PagoDirecto.Presentation.Filters.ValidatorFilterAttribute>();
+        })
+        .AddJsonOptions(options =>
+        {
+            options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
         });
 
         return services;

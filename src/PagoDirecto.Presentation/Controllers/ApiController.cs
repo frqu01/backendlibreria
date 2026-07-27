@@ -20,12 +20,12 @@ namespace PagoDirecto.Presentation.Controllers
                 return Ok(result);
             }
 
-            if (result.RequestStatus?.NotificationTypeId == NotificationType.Warning)
+            if (result.RequestStatus?.NotificationType == NotificationType.Warning)
             {
                 return BadRequest(result);
             }
 
-            if (result.RequestStatus?.NotificationTypeId == NotificationType.Error)
+            if (result.RequestStatus?.NotificationType == NotificationType.Error)
             {
                 return StatusCode(500, result);
             }

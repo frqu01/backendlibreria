@@ -61,7 +61,7 @@ namespace PagoDirecto.Infrastructure.Repositories
                             IsSuccess = false,
                             ResponseMessage = "Ocurrió un error inesperado al procesar la solicitud.",
                             ResponseMessageDetail = $"Reference ID: {traceId}",
-                            NotificationTypeId = NotificationType.Error
+                            NotificationType = NotificationType.Error
                         }
                     };
                 }
@@ -88,7 +88,7 @@ namespace PagoDirecto.Infrastructure.Repositories
                     {
                         IsSuccess = false,
                         ResponseMessage = MessageType.UnhandledException.GetString(),
-                        NotificationTypeId = NotificationType.Error
+                        NotificationType = NotificationType.Error
                     }
                 };
 
@@ -100,7 +100,8 @@ namespace PagoDirecto.Infrastructure.Repositories
             await context.Response.WriteAsync(JsonConvert.SerializeObject(resultadoApi, Formatting.None,
                             new JsonSerializerSettings
                             {
-                                NullValueHandling = NullValueHandling.Ignore
+                                NullValueHandling = NullValueHandling.Ignore,
+                                Converters = { new Newtonsoft.Json.Converters.StringEnumConverter() }
                             })).ConfigureAwait(false);
         }
         //Errores de carga en el servidor
@@ -121,7 +122,7 @@ namespace PagoDirecto.Infrastructure.Repositories
                     IsSuccess = false,
                     ResponseMessage = "Ocurrió un error en el servidor HTTP.",
                     ResponseMessageDetail = $"Reference ID: {traceId}",
-                    NotificationTypeId = NotificationType.Error
+                    NotificationType = NotificationType.Error
                 };
             }
             else
@@ -133,7 +134,7 @@ namespace PagoDirecto.Infrastructure.Repositories
                     IsSuccess = false,
                     ResponseMessage = "Error interno crítico en el servidor.",
                     ResponseMessageDetail = $"Reference ID: {traceId}",
-                    NotificationTypeId = NotificationType.Error
+                    NotificationType = NotificationType.Error
                 };
             }
 
@@ -150,7 +151,8 @@ namespace PagoDirecto.Infrastructure.Repositories
             await context.HttpContext.Response.WriteAsync(JsonConvert.SerializeObject(resultadoApi, Formatting.None,
                             new JsonSerializerSettings
                             {
-                                NullValueHandling = NullValueHandling.Ignore
+                                NullValueHandling = NullValueHandling.Ignore,
+                                Converters = { new Newtonsoft.Json.Converters.StringEnumConverter() }
                             }));
         }
         public void ExceptionSaveRecord(ChangeTracker changeTracker)
@@ -224,7 +226,7 @@ namespace PagoDirecto.Infrastructure.Repositories
                         {
                             IsSuccess = false,
                             ResponseMessage = "Se encontraron errores de validación.",
-                            NotificationTypeId = NotificationType.Warning
+                            NotificationType = NotificationType.Warning
                         },
                         ValidationErrors = errores
                     };

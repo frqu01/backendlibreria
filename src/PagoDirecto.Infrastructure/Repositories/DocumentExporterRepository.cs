@@ -155,7 +155,7 @@ namespace PagoDirecto.Infrastructure.Repositories
                         RequestStatus = new RequestStatus()
                         {
                             IsSuccess = true,
-                            NotificationTypeId = NotificationType.Success,
+                            NotificationType = NotificationType.Success,
                             ResponseMessage = "Exportado correctamente."
                         },
                         Data = new ExportFile()
@@ -276,7 +276,7 @@ namespace PagoDirecto.Infrastructure.Repositories
                     RequestStatus = new RequestStatus()
                     {
                         IsSuccess = true,
-                        NotificationTypeId = NotificationType.Success,
+                        NotificationType = NotificationType.Success,
                         ResponseMessage = "Exportado correctamente."
                     },
                     Data = new ExportFile()
@@ -427,7 +427,7 @@ namespace PagoDirecto.Infrastructure.Repositories
                     RequestStatus = new RequestStatus()
                     {
                         IsSuccess = true,
-                        NotificationTypeId = NotificationType.Success,
+                        NotificationType = NotificationType.Success,
                         ResponseMessage = "Exportado correctamente."
                     },
                     Data = new ExportFile()
@@ -455,7 +455,7 @@ namespace PagoDirecto.Infrastructure.Repositories
                 RequestStatus = new RequestStatus()
                 {
                     IsSuccess = false,
-                    NotificationTypeId = NotificationType.Error,
+                    NotificationType = NotificationType.Error,
                     ResponseMessage = message
                 }
             };

@@ -42,7 +42,7 @@ public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
                 {
                     IsSuccess = false,
                     ResponseMessage = ResponseMessage.ValidationError.GetString(),
-                    NotificationTypeId = NotificationType.Warning
+                    NotificationType = NotificationType.Warning
                 };
 
                 result.ValidationErrors = failures.Select(f => new PagoDirecto.Domain.Entities.ValidationError()

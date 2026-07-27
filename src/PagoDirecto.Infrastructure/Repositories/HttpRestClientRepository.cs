@@ -130,7 +130,7 @@ namespace PagoDirecto.Infrastructure.Repositories
                 {
                     IsSuccess = false,
                     ResponseMessage = "Error al consumir servicio",
-                    NotificationTypeId = NotificationType.Error,
+                    NotificationType = NotificationType.Error,
                     ResponseMessageDetail = ex.Message
                 };
 
@@ -149,7 +149,7 @@ namespace PagoDirecto.Infrastructure.Repositories
                 {
                     IsSuccess = false,
                     ResponseMessage = $"Error de la API externa (HTTP {(int)httpResponseMessage.StatusCode})",
-                    NotificationTypeId = NotificationType.Error,
+                    NotificationType = NotificationType.Error,
                     ResponseMessageDetail = response 
                 };
                 resultadoApi.Data = null;

@@ -44,7 +44,7 @@ namespace PagoDirecto.Infrastructure.Repositories
                     RequestStatus = new RequestStatus()
                     {
                         IsSuccess = true,
-                        NotificationTypeId = NotificationType.Success,
+                        NotificationType = NotificationType.Success,
                         ResponseMessage = "Se desencriptó correctamente."
                     },
                     Data = dataProtectionProvider.Unprotect(texto)
@@ -80,7 +80,7 @@ namespace PagoDirecto.Infrastructure.Repositories
                     RequestStatus = new RequestStatus()
                     {
                         IsSuccess = true,
-                        NotificationTypeId = NotificationType.Success,
+                        NotificationType = NotificationType.Success,
                         ResponseMessage = "Se encriptó correctamente."
                     },
                     Data = dataProtectionProvider.Protect(texto)
@@ -102,7 +102,7 @@ namespace PagoDirecto.Infrastructure.Repositories
                 RequestStatus = new RequestStatus()
                 {
                     IsSuccess = false,
-                    NotificationTypeId = NotificationType.Error,
+                    NotificationType = NotificationType.Error,
                     ResponseMessage = message
                 }
             };
