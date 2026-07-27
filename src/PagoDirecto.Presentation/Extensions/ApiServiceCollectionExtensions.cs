@@ -104,18 +104,12 @@ public static class ApiServiceCollectionExtensions
 
         app.UseSwagger(c =>
         {
-            c.RouteTemplate = string.IsNullOrEmpty(appOptions.ApplicationCode)
-                ? "swagger/{documentName}/swagger.json"
-                : $"swagger/{{documentName}}/aplicacionid{appOptions.ApplicationCode}.json";
+            c.RouteTemplate = "swagger/{documentName}/swagger.json";
         });
 
         app.UseSwaggerUI(c =>
         {
-            var endpointUrl = string.IsNullOrEmpty(appOptions.ApplicationCode)
-                ? "/swagger/service/swagger.json"
-                : $"/swagger/service/aplicacionid{appOptions.ApplicationCode}.json";
-
-            c.SwaggerEndpoint(endpointUrl, appOptions.ApplicationName);
+            c.SwaggerEndpoint("/swagger/service/swagger.json", appOptions.ApplicationName);
             c.RoutePrefix = "swagger";
         });
 
