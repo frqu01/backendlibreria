@@ -1,5 +1,6 @@
 using System.Reflection;
 using PagoDirecto.Application.Interfaces;
+using PagoDirecto.Infrastructure.Services;
 using PagoDirecto.Domain.Entities;
 using PagoDirecto.Infrastructure.Repositories;
 using PagoDirecto.Application.Configuration;
@@ -28,6 +29,7 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IDocumentExporter, DocumentExporterRepository>();
         services.AddScoped<IExceptionManager, ExceptionManagerRepository>();
         services.AddScoped<IKafkaProducer, KafkaProducerRepository>();
+        services.AddScoped<ICurrentUserService, CurrentUserService>();
 
         services.AddSingleton<IProducer<Null, string>>(sp =>
         {

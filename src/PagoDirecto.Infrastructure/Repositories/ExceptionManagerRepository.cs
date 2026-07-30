@@ -23,10 +23,12 @@ namespace PagoDirecto.Infrastructure.Repositories
     internal class ExceptionManagerRepository : IExceptionManager
     {
         private readonly ILogger<ExceptionManagerRepository> _logger;
+        private readonly ICurrentUserService _currentUserService;
 
-        public ExceptionManagerRepository(ILogger<ExceptionManagerRepository> logger)
+        public ExceptionManagerRepository(ILogger<ExceptionManagerRepository> logger, ICurrentUserService currentUserService)
         {
             _logger = logger;
+            _currentUserService = currentUserService;
         }
         //Errores controlados
         public async Task HandlerExceptionApplication(HttpContext context)
@@ -159,8 +161,10 @@ namespace PagoDirecto.Infrastructure.Repositories
         {
             var errores = new List<ValidationError>();
             int count = 1;
-            int registroEmpresaId = 0;
-            long registroApiUsernameId = 0;
+            
+            // Extraer del token de forma automática
+            int registroEmpresaId = _currentUserService.CompanyRecordId;
+            long registroApiUsernameId = _currentUserService.UserRecordId;
 
             if (changeTracker.Entries().Any())
             {
@@ -170,46 +174,36 @@ namespace PagoDirecto.Infrastructure.Repositories
 
                     if (item.Entity is EntityRecord record)
                     {
+                        // Siempre asignamos el ID del Token, protegiendo contra manipulaciones del frontend
+                        if (registroEmpresaId > 0)
+                        {
+                            record.CompanyRecordId = registroEmpresaId;
+                        }
+                        
+                        if (registroApiUsernameId > 0)
+                        {
+                            record.UserRecordId = registroApiUsernameId;
+                        }
+                        
+                        // Si después de asignar el Token (o si el endpoint es anónimo) siguen en 0 y son requeridos, fallará.
                         if (record.CompanyRecordId == 0)
                         {
-                            if (registroEmpresaId != 0)
+                            errores.Add(new ValidationError()
                             {
-                                record.CompanyRecordId = registroEmpresaId;
-                            }
-                            else
-                            {
-                                errores.Add(new ValidationError()
-                                {
-                                    Entity = nameEntity,
-                                    Field = "CompanyRecordId",
-                                    Message = "'CompanyRecordId' no debería estar vacío."
-                                });
-                            }
-                        }
-                        else
-                        {
-                            registroEmpresaId = record.CompanyRecordId;
+                                Entity = nameEntity,
+                                Field = "CompanyRecordId",
+                                Message = "'CompanyRecordId' no debería estar vacío (Requiere autenticación válida)."
+                            });
                         }
 
                         if (record.UserRecordId == 0)
                         {
-                            if (registroApiUsernameId != 0)
+                            errores.Add(new ValidationError()
                             {
-                                record.UserRecordId = registroApiUsernameId;
-                            }
-                            else
-                            {
-                                errores.Add(new ValidationError()
-                                {
-                                    Entity = nameEntity,
-                                    Field = "UserRecordId",
-                                    Message = "'UserRecordId' no debería estar vacío."
-                                });
-                            }
-                        }
-                        else
-                        {
-                            registroApiUsernameId = record.UserRecordId;
+                                Entity = nameEntity,
+                                Field = "UserRecordId",
+                                Message = "'UserRecordId' no debería estar vacío (Requiere autenticación válida)."
+                            });
                         }
                     }
 
