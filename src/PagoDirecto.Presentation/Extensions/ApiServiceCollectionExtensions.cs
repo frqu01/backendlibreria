@@ -6,6 +6,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi;
 using System.Collections.Generic;
 using System.Reflection;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting;
+using PagoDirecto.Application.Interfaces;
 
 namespace PagoDirecto.Presentation.Extensions;
 
@@ -28,10 +31,13 @@ public static class ApiServiceCollectionExtensions
         services.AddControllers(options =>
         {
             options.Filters.Add<PagoDirecto.Presentation.Filters.ValidatorFilterAttribute>();
+            options.ModelValidatorProviders.Clear();
         })
         .AddJsonOptions(options =>
         {
             options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+            options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
+            options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
         });
 
         return services;
@@ -39,11 +45,32 @@ public static class ApiServiceCollectionExtensions
 
     public static IApplicationBuilder UsePagoDirectoLibrary(this IApplicationBuilder app, IConfiguration configuration)
     {
-        app.UsePagoDirectoSwagger(configuration);
+        // 1. Manejo global de excepciones (Errores 500 no controlados)
+        app.UseExceptionHandler(appError =>
+        {
+            appError.Run(async context =>
+            {
+                var exceptionManager = context.RequestServices.GetRequiredService<IExceptionManager>();
+                await exceptionManager.HandlerExceptionApplication(context);
+            });
+        });
+
+        // 2. Manejo de Status Codes (Errores 404, 401, 403, etc sin body)
+        app.UseStatusCodePages(async context =>
+        {
+            var exceptionManager = context.HttpContext.RequestServices.GetRequiredService<IExceptionManager>();
+            await exceptionManager.HandlerExceptionServer(context);
+        });
+
+        var env = app.ApplicationServices.GetRequiredService<IWebHostEnvironment>();
+        if (env.IsDevelopment())
+        {
+            app.UsePagoDirectoSwagger(configuration);
+        }
         return app;
     }
 
-    public static IServiceCollection AddPagoDirectoSwagger(this IServiceCollection services, IConfiguration configuration)
+    internal static IServiceCollection AddPagoDirectoSwagger(this IServiceCollection services, IConfiguration configuration)
     {
         var appOptions = configuration.GetSection("AppOptions").Get<ApplicationOptions>()
                          ?? configuration.GetSection("Application").Get<ApplicationOptions>()
@@ -101,7 +128,7 @@ public static class ApiServiceCollectionExtensions
         return services;
     }
 
-    public static IApplicationBuilder UsePagoDirectoSwagger(this IApplicationBuilder app, IConfiguration configuration)
+    internal static IApplicationBuilder UsePagoDirectoSwagger(this IApplicationBuilder app, IConfiguration configuration)
     {
         var appOptions = configuration.GetSection("AppOptions").Get<ApplicationOptions>()
                          ?? configuration.GetSection("Application").Get<ApplicationOptions>()

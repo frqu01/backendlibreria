@@ -11,11 +11,13 @@ namespace PagoDirecto.Infrastructure.Repositories;
 internal class UnitOfWork : IUnitOfWork
 {
     private readonly DbContext _context;
+    private readonly IExceptionManager _exceptionManager;
     private readonly Dictionary<string, object> _repositories = new();
 
-    public UnitOfWork(DbContext context)
+    public UnitOfWork(DbContext context, IExceptionManager exceptionManager)
     {
         _context = context;
+        _exceptionManager = exceptionManager;
     }
 
     public IGenericRepository<TEntity> Repository<TEntity>() where TEntity : class
@@ -33,6 +35,7 @@ internal class UnitOfWork : IUnitOfWork
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
+        _exceptionManager.ExceptionSaveRecord(_context.ChangeTracker);
         return await _context.SaveChangesAsync(cancellationToken);
     }
 
