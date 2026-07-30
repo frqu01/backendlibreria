@@ -125,7 +125,6 @@ namespace PagoDirecto.Infrastructure.Repositories
                     {
                         IsSuccess = false,
                         ResponseMessage = "Se encontraron errores de validación.",
-                        ResponseMessageDetail = $"Reference ID: {traceId}",
                         NotificationType = NotificationType.Warning
                     };
                     resultadoApi.ValidationErrors = new List<ValidationError>
