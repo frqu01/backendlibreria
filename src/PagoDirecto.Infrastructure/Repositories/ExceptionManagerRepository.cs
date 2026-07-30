@@ -119,13 +119,31 @@ namespace PagoDirecto.Infrastructure.Repositories
             {
                 contenido = "Código: " + context.HttpContext.Response.StatusCode.ToString() + ". Url: " + context.HttpContext.Request.Path;
 
-                resultadoApi.RequestStatus = new RequestStatus()
+                if (context.HttpContext.Response.StatusCode == 401)
                 {
-                    IsSuccess = false,
-                    ResponseMessage = "Ocurrió un error en el servidor HTTP.",
-                    ResponseMessageDetail = $"Reference ID: {traceId}",
-                    NotificationType = NotificationType.Error
-                };
+                    resultadoApi.RequestStatus = new RequestStatus()
+                    {
+                        IsSuccess = false,
+                        ResponseMessage = "Se encontraron errores de validación.",
+                        ResponseMessageDetail = $"Reference ID: {traceId}",
+                        NotificationType = NotificationType.Warning
+                    };
+                    resultadoApi.ValidationErrors = new List<ValidationError>
+                    {
+                        new ValidationError { Field = "CompanyRecordId", Message = "'CompanyRecordId' es requerido." },
+                        new ValidationError { Field = "UserRecordId", Message = "'UserRecordId' es requerido." }
+                    };
+                }
+                else
+                {
+                    resultadoApi.RequestStatus = new RequestStatus()
+                    {
+                        IsSuccess = false,
+                        ResponseMessage = "Ocurrió un error en el servidor HTTP.",
+                        ResponseMessageDetail = $"Reference ID: {traceId}",
+                        NotificationType = NotificationType.Error
+                    };
+                }
             }
             else
             {
