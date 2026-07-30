@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.Text.Json.Serialization;
 
 namespace PagoDirecto.Domain.Enums;
@@ -24,7 +24,7 @@ public enum ResponseMessage
     [Description("{0} ya existe.")]
     RecordAlreadyExists = 6,
 
-    [Description("Se encontraron errores de validaciÃ³n.")]
+    [Description("Se encontraron errores de validación.")]
     ValidationError = 7,
 
     [Description("{0} no existe.")]
