@@ -24,17 +24,7 @@ namespace PagoDirecto.Infrastructure.Repositories
             _logger = logger;
         }
 
-        public Task<Result> Gmail(Email correoApi, CancellationToken cancellationToken = default)
-        {
-            return SendEmailAsync(correoApi, EmailHostType.Gmail, cancellationToken);
-        }
-
-        public Task<Result> Outlook(Email correoApi, CancellationToken cancellationToken = default)
-        {
-            return SendEmailAsync(correoApi, EmailHostType.Outlook, cancellationToken);
-        }
-
-        private async Task<Result> SendEmailAsync(Email correoApi, EmailHostType hostType, CancellationToken cancellationToken = default)
+        public async Task<Result> SendEmailAsync(Email correoApi, EmailHostType hostType, CancellationToken cancellationToken = default)
         {
             if (correoApi == null)
                 return ErrorResult("No se enviaron los datos del correo.");

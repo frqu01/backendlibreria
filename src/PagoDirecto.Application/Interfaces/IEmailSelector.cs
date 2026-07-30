@@ -9,8 +9,7 @@ namespace PagoDirecto.Application.Interfaces
 {
     public interface IEmailSelector
     {
-        Task<Result> Outlook(Email correoApi, System.Threading.CancellationToken cancellationToken = default);
-        Task<Result> Gmail(Email correoApi, System.Threading.CancellationToken cancellationToken = default);
+        Task<Result> SendEmailAsync(Email correoApi, PagoDirecto.Domain.Enums.EmailHostType hostType, System.Threading.CancellationToken cancellationToken = default);
     }
 }
 
