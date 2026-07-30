@@ -18,10 +18,13 @@ public class CurrentUserService : ICurrentUserService
         get
         {
             var user = _httpContextAccessor.HttpContext?.User;
-            if (user == null || !user.Identity.IsAuthenticated) return 0;
+            if (user == null || !user.Identity.IsAuthenticated) throw new UnauthorizedAccessException("El token es requerido.");
             
             var claim = user.Claims.FirstOrDefault(c => c.Type == "UserRecordId")?.Value;
-            return long.TryParse(claim, out var val) ? val : 0;
+            if (!long.TryParse(claim, out var val) || val == 0)
+                throw new UnauthorizedAccessException("El token no contiene un UserRecordId válido.");
+                
+            return val;
         }
     }
 
@@ -30,10 +33,13 @@ public class CurrentUserService : ICurrentUserService
         get
         {
             var user = _httpContextAccessor.HttpContext?.User;
-            if (user == null || !user.Identity.IsAuthenticated) return 0;
+            if (user == null || !user.Identity.IsAuthenticated) throw new UnauthorizedAccessException("El token es requerido.");
             
             var claim = user.Claims.FirstOrDefault(c => c.Type == "CompanyRecordId")?.Value;
-            return int.TryParse(claim, out var val) ? val : 0;
+            if (!int.TryParse(claim, out var val) || val == 0)
+                throw new UnauthorizedAccessException("El token no contiene un CompanyRecordId válido.");
+                
+            return val;
         }
     }
 }
