@@ -22,22 +22,24 @@ namespace PagoDirecto.Infrastructure.Repositories
     internal class DocumentExporterRepository : IDocumentExporter
     {
         private readonly ILogger<DocumentExporterRepository> _logger;
+        private readonly IResponseFactory _responseFactory;
 
-        public DocumentExporterRepository(ILogger<DocumentExporterRepository> logger)
+        public DocumentExporterRepository(ILogger<DocumentExporterRepository> logger, IResponseFactory responseFactory)
         {
             _logger = logger;
+            _responseFactory = responseFactory;
         }
         public Task<Result> Exportar(object? listaDatos, ExportReportType ePagoDirectoExportReportTypeApi)
         {
             if (listaDatos == null || !(listaDatos is System.Collections.IEnumerable enumerableDatos))
             {
-                return Task.FromResult(ErrorResult("No se envió una lista de datos válida."));
+                return Task.FromResult(_responseFactory.Error("No se envió una lista de datos válida."));
             }
 
             var list = enumerableDatos.Cast<object>().ToList();
             if (list.Count < 1)
             {
-                return Task.FromResult(ErrorResult("No se encontraron registros para exportar."));
+                return Task.FromResult(_responseFactory.Error("No se encontraron registros para exportar."));
             }
 
             switch (ePagoDirectoExportReportTypeApi)
@@ -49,18 +51,18 @@ namespace PagoDirecto.Infrastructure.Repositories
                 case ExportReportType.Word:
                     return Word(list);
                 default:
-                    return Task.FromResult(ErrorResult("Tipo de exportación no soportado."));
+                    return Task.FromResult(_responseFactory.Error("Tipo de exportación no soportado."));
             }
         }
 
         private Task<Result> Excel(object? listaDatos)
         {
             if (listaDatos == null || !(listaDatos is System.Collections.IEnumerable enumerableDatos))
-                return Task.FromResult(ErrorResult("No se envió una lista de datos válida."));
+                return Task.FromResult(_responseFactory.Error("No se envió una lista de datos válida."));
 
             var list = enumerableDatos.Cast<object>().ToList();
             if (list.Count < 1)
-                return Task.FromResult(ErrorResult("No se encontraron registros para exportar."));
+                return Task.FromResult(_responseFactory.Error("No se encontraron registros para exportar."));
 
             try
             {
@@ -172,18 +174,18 @@ namespace PagoDirecto.Infrastructure.Repositories
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al generar el reporte en Excel.");
-                return Task.FromResult(ErrorResult("Ocurrió un error inesperado al generar el archivo Excel."));
+                return Task.FromResult(_responseFactory.Error("Ocurrió un error inesperado al generar el archivo Excel."));
             }
         }
 
         private Task<Result> Pdf(object? listaDatos)
         {
             if (listaDatos == null || !(listaDatos is System.Collections.IEnumerable enumerableDatos))
-                return Task.FromResult(ErrorResult("No se envió una lista de datos válida."));
+                return Task.FromResult(_responseFactory.Error("No se envió una lista de datos válida."));
 
             var list = enumerableDatos.Cast<object>().ToList();
             if (list.Count < 1)
-                return Task.FromResult(ErrorResult("No se encontraron registros para exportar."));
+                return Task.FromResult(_responseFactory.Error("No se encontraron registros para exportar."));
 
             try
             {
@@ -292,18 +294,18 @@ namespace PagoDirecto.Infrastructure.Repositories
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al generar el reporte en PDF.");
-                return Task.FromResult(ErrorResult("Ocurrió un error inesperado al generar el archivo PDF."));
+                return Task.FromResult(_responseFactory.Error("Ocurrió un error inesperado al generar el archivo PDF."));
             }
         }
 
         private Task<Result> Word(object? listaDatos)
         {
             if (listaDatos == null || !(listaDatos is System.Collections.IEnumerable enumerableDatos))
-                return Task.FromResult(ErrorResult("No se envió una lista de datos válida."));
+                return Task.FromResult(_responseFactory.Error("No se envió una lista de datos válida."));
 
             var list = enumerableDatos.Cast<object>().ToList();
             if (list.Count < 1)
-                return Task.FromResult(ErrorResult("No se encontraron registros para exportar."));
+                return Task.FromResult(_responseFactory.Error("No se encontraron registros para exportar."));
 
             try
             {
@@ -444,22 +446,10 @@ namespace PagoDirecto.Infrastructure.Repositories
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al generar el reporte en Word.");
-                return Task.FromResult(ErrorResult("Ocurrió un error inesperado al generar el archivo Word."));
+                return Task.FromResult(_responseFactory.Error("Ocurrió un error inesperado al generar el archivo Word."));
             }
         }
 
-        private static Result ErrorResult(string message)
-        {
-            return new Result()
-            {
-                RequestStatus = new RequestStatus()
-                {
-                    IsSuccess = false,
-                    NotificationType = NotificationType.Error,
-                    ResponseMessage = message
-                }
-            };
-        }
 
         private void OrientacionHorizontal(Body body)
         {

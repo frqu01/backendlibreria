@@ -18,25 +18,27 @@ namespace PagoDirecto.Infrastructure.Repositories
     internal class EmailSelectorRepository : IEmailSelector
     {
         private readonly ILogger<EmailSelectorRepository> _logger;
+        private readonly IResponseFactory _responseFactory;
 
-        public EmailSelectorRepository(ILogger<EmailSelectorRepository> logger)
+        public EmailSelectorRepository(ILogger<EmailSelectorRepository> logger, IResponseFactory responseFactory)
         {
             _logger = logger;
+            _responseFactory = responseFactory;
         }
 
         public async Task<Result> SendEmailAsync(Email correoApi, EmailHostType hostType, CancellationToken cancellationToken = default)
         {
             if (correoApi == null)
-                return ErrorResult("No se enviaron los datos del correo.");
+                return _responseFactory.Warning("No se enviaron los datos del correo.");
 
             if (string.IsNullOrWhiteSpace(correoApi.Sender))
-                return ErrorResult("No se envió el emisor.");
+                return _responseFactory.Warning("No se envió el emisor.");
 
             if (correoApi.Recipients == null || !correoApi.Recipients.Any())
-                return ErrorResult("No se envió el receptor.");
+                return _responseFactory.Warning("No se envió el receptor.");
 
             if (string.IsNullOrWhiteSpace(correoApi.Body))
-                return ErrorResult("No se envió el cuerpo.");
+                return _responseFactory.Warning("No se envió el cuerpo.");
 
             try
             {
@@ -123,18 +125,7 @@ namespace PagoDirecto.Infrastructure.Repositories
             }
         }
 
-        private static Result ErrorResult(string message)
-        {
-            return new Result()
-            {
-                RequestStatus = new RequestStatus()
-                {
-                    IsSuccess = false,
-                    NotificationType = NotificationType.Warning,
-                    ResponseMessage = message
-                }
-            };
-        }
+
     }
 }
 

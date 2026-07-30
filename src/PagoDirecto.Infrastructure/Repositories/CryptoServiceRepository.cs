@@ -17,21 +17,24 @@ namespace PagoDirecto.Infrastructure.Repositories
         protected readonly IDataProtectionProvider _iDataProtectionProvider;
         protected readonly CryptoOptions _dataProtectionOptions;
         private readonly ILogger<CryptoServiceRepository> _logger;
+        private readonly IResponseFactory _responseFactory;
         
         public CryptoServiceRepository(
             IDataProtectionProvider iDataProtectionProvider, 
             IOptions<CryptoOptions> dataProtectionOptions,
-            ILogger<CryptoServiceRepository> logger)
+            ILogger<CryptoServiceRepository> logger,
+            IResponseFactory responseFactory)
         {
             _iDataProtectionProvider = iDataProtectionProvider;
             _dataProtectionOptions = dataProtectionOptions.Value;
             _logger = logger;
+            _responseFactory = responseFactory;
         }
 
         public Task<Result> DecryptAsync(string texto)
         {
             if (string.IsNullOrWhiteSpace(texto))
-                return Task.FromResult(ErrorResult("El texto a descifrar no puede estar vacío."));
+                return Task.FromResult(_responseFactory.Error("El texto a descifrar no puede estar vacío."));
 
             try
             {
@@ -55,19 +58,19 @@ namespace PagoDirecto.Infrastructure.Repositories
             catch (CryptographicException ex)
             {
                 _logger.LogWarning(ex, "Fallo al descifrar el texto. Posible alteración, corrupción de datos o llave revocada.");
-                return Task.FromResult(ErrorResult("El texto proporcionado no es válido o está corrupto."));
+                return Task.FromResult(_responseFactory.Error("El texto proporcionado no es válido o está corrupto."));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Fallo inesperado al intentar descifrar el texto.");
-                return Task.FromResult(ErrorResult("Ocurrió un error inesperado durante el descifrado."));
+                return Task.FromResult(_responseFactory.Error("Ocurrió un error inesperado durante el descifrado."));
             }
         }
 
         public Task<Result> EncryptAsync(string texto)
         {
             if (string.IsNullOrWhiteSpace(texto))
-                return Task.FromResult(ErrorResult("El texto a encriptar no puede estar vacío."));
+                return Task.FromResult(_responseFactory.Error("El texto a encriptar no puede estar vacío."));
 
             try
             {
@@ -91,22 +94,10 @@ namespace PagoDirecto.Infrastructure.Repositories
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Fallo inesperado al intentar encriptar el texto.");
-                return Task.FromResult(ErrorResult("Ocurrió un error inesperado durante la encriptación."));
+                return Task.FromResult(_responseFactory.Error("Ocurrió un error inesperado durante la encriptación."));
             }
         }
 
-        private static Result ErrorResult(string message)
-        {
-            return new Result()
-            {
-                RequestStatus = new RequestStatus()
-                {
-                    IsSuccess = false,
-                    NotificationType = NotificationType.Error,
-                    ResponseMessage = message
-                }
-            };
-        }
     }
 }
 
